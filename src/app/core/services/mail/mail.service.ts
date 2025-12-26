@@ -8,7 +8,7 @@ import { ContactForm } from '../../../shared/models/contact-form.model';
 })
 export class MailService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiBaseUrl}/mailer`;
+  private apiUrl = `${environment.apiUrl}/mailer`;
 
   sendMail(data: ContactForm): void {
     if (!data.email || !data.message) {
