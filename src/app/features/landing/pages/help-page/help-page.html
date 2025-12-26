@@ -1,0 +1,95 @@
+<section>
+  <div class="m-auto flex flex-col lg:flex-row gap-12 p-12 lg:items-start lg:justify-center">
+    <!-- left -->
+    <div>
+      <!-- Header Section -->
+      <div class="mb-16">
+        <h1 class="text-5xl font-bold mb-5 text-gray-900">FAQs</h1>
+        <p class="text-base text-gray-600 max-w-sm leading-relaxed">
+          Everything you need to know about features, membership, and troubleshooting.
+        </p>
+      </div>
+
+      <!-- Categories Section -->
+      <div class="flex gap-4 mb-16 flex-wrap">
+        <app-help-categories-button
+          (categorySelected)="selectCategory($event)"
+          [selectedCategory]="selectedCategory"
+        />
+      </div>
+    </div>
+
+    <!-- FAQ Items Section -->
+    <div class="max-w-2xl">
+      @for (faq of filteredFaqs; track faq.id) {
+      <div class="mb-4 bg-white rounded-lg overflow-hidden shadow-md">
+        <div
+          class="p-5 cursor-pointer flex justify-between items-center transition-colors duration-200 hover:bg-gray-50"
+          (click)="toggleFaq(faq.id)"
+        >
+          <h3 class="text-base font-semibold text-gray-900">{{ faq.question }}</h3>
+          <span
+            class="text-2xl text-gray-600 transition-transform duration-300 shrink-0 ml-4"
+            [ngClass]="{ 'rotate-45 text-gray-900': faq.open }"
+            >+</span
+          >
+        </div>
+        <div
+          [ngClass]="{ 'max-h-96 opacity-100': faq.open, 'max-h-0 opacity-0': !faq.open }"
+          class="overflow-hidden transition-all duration-300"
+        >
+          <p class="px-5 pb-5 text-sm leading-relaxed text-gray-700">{{ faq.answer }}</p>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  <div class="flex flex-col max-w-2xl m-auto mb-12 p-12">
+    <h3 class="text-2xl font-bold mb-6 text-gray-900">Contact us</h3>
+    <!-- contact form -->
+    <form [formGroup]="contactForm" (ngSubmit)="submitContactForm()">
+      <!-- email input -->
+      <div>
+        <label for="email">
+          Email @if (email?.hasError('required') || email?.invalid && (email?.dirty ||
+          email?.touched)) {
+          <span class="text-red-600 text-sm">*</span>
+          }
+        </label>
+        <input
+          id="email"
+          type="email"
+          placeholder="Your email"
+          class="border p-2 rounded w-full mb-0"
+          formControlName="email"
+        />
+      </div>
+
+      <!-- message textarea -->
+      <div class="mt-4">
+        <label for="message">
+          Message @if (message?.hasError('required') || message?.invalid && (message?.dirty ||
+          message?.touched)) {
+          <span class="text-red-600 text-sm">*</span>
+          }
+        </label>
+        <textarea
+          id="message"
+          rows="4"
+          placeholder="Your message"
+          class="border p-2 rounded w-full mb-4"
+          formControlName="message"
+        ></textarea>
+      </div>
+
+      <!-- submit button -->
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300 cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+        [disabled]="contactForm.invalid || isSubmitting()"
+      >
+        {{ isSubmitting() ? 'Submitting...' : 'Submit' }}
+      </button>
+    </form>
+  </div>
+</section>

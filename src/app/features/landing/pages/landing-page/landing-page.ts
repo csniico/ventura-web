@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-landing-page',
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './landing-page.html',
 })
 export class LandingPage {}

@@ -1,0 +1,15 @@
+<div class="flex gap-4 mb-16 flex-wrap max-w-xl">
+  @for (cat of categories; track cat.key) {
+  <button
+    class="px-6 py-3 border-2 border-gray-900 rounded-full text-sm font-semibold cursor-pointer transition-all duration-300"
+    [ngClass]="
+      selectedCategory() === cat.key
+        ? 'bg-gray-900 text-white'
+        : 'bg-white text-gray-900 hover:bg-gray-100'
+    "
+    (click)="onCategorySelect(cat.key)"
+  >
+    {{ cat.label }}
+  </button>
+  }
+</div>

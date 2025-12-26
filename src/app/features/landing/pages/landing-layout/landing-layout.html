@@ -1,0 +1,57 @@
+<div class="h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="shrink-0 flex items-center">
+          <span class="text-2xl font-bold text-blue-600">Ventua</span>
+        </div>
+        <nav class="hidden md:flex space-x-8">
+          <a routerLink="/" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >Home</a
+          >
+          <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >Features</a
+          >
+          <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >Pricing</a
+          >
+          <a
+            routerLink="help"
+            class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+            >Help</a
+          >
+        </nav>
+        <div class="flex items-center">
+          <button
+            class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 cursor-pointer"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="grow">
+    <router-outlet />
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="text-gray-500 text-sm">&copy; 2025 Ventua. All rights reserved.</div>
+        <div class="flex space-x-6 mt-4 md:mt-0">
+          <a routerLink="/governance/privacy-policy" class="text-gray-400 hover:text-gray-500"
+            >Privacy Policy</a
+          >
+          <a routerLink="/governance/terms-of-use" class="text-gray-400 hover:text-gray-500"
+            >Terms of Use</a
+          >
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
