@@ -1,0 +1,87 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div>
+      <div class="flex justify-center mb-6">
+        <a routerLink="/" class="flex items-center hover:opacity-80 transition-opacity">
+          <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-xl">V</span>
+          </div>
+          <span class="ml-2 text-2xl font-bold text-blue-600">Ventura</span>
+        </a>
+      </div>
+      
+      <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+        Sign in to your account
+      </h2>
+    </div>
+
+    <!-- Login Form -->
+    <form class="mt-8 space-y-6" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="rounded-md bg-red-50 p-4 border border-red-200">
+          <p class="text-sm text-red-800">{{ errorMessage() }}</p>
+        </div>
+      }
+
+      <div class="space-y-4">
+        <!-- Email Field -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-300]="email?.invalid && email?.touched"
+            placeholder="Enter your email"
+          />
+          @if (email?.invalid && email?.touched) {
+            <p class="mt-1 text-sm text-red-600">Valid email is required</p>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-300]="password?.invalid && password?.touched"
+            placeholder="Enter your password"
+          />
+          @if (password?.invalid && password?.touched) {
+            <p class="mt-1 text-sm text-red-600">Password is required</p>
+          }
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        [disabled]="loginForm.invalid || isLoading()"
+        class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        @if (isLoading()) {
+          <app-loading-spinner size="sm" text="Signing in..." />
+        } @else {
+          Sign in
+        }
+      </button>
+
+      <!-- Links -->
+      <div class="text-center space-y-2">
+        <a routerLink="/auth/forgot-password" class="text-sm text-blue-600 hover:underline">
+          Forgot password?
+        </a>
+        <p class="text-sm text-gray-600">
+          Don't have an account?
+          <a routerLink="/auth/register" class="text-blue-600 hover:underline">Sign up</a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,95 +1,178 @@
-<section>
-  <div class="m-auto flex flex-col lg:flex-row gap-12 p-12 lg:items-start lg:justify-center">
-    <!-- left -->
-    <div>
-      <!-- Header Section -->
-      <div class="mb-16">
-        <h1 class="text-5xl font-bold mb-5 text-gray-900">FAQs</h1>
-        <p class="text-base text-gray-600 max-w-sm leading-relaxed">
-          Everything you need to know about features, membership, and troubleshooting.
-        </p>
+<!-- Help Page with Modern Design -->
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
+  <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
+  <div class="absolute top-4 left-4 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+  <div class="absolute top-4 right-4 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+  
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+      <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-6">
+        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+        </svg>
+        Help & Support
+      </div>
+      
+      <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+        How can we
+        <span class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          help you?
+        </span>
+      </h1>
+      
+      <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+        Find answers to common questions, get support, or reach out to our team.
+        <span class="font-semibold text-gray-800">We're here to help you succeed.</span>
+      </p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-col lg:flex-row gap-16 lg:items-start">
+      <!-- Left Column - Categories & Header -->
+      <div class="lg:w-1/3">
+        <!-- FAQ Header -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20 mb-8">
+          <h2 class="text-3xl font-bold mb-4 text-gray-900">Frequently Asked Questions</h2>
+          <p class="text-gray-600 leading-relaxed">
+            Everything you need to know about features, membership, and troubleshooting.
+          </p>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+          <h3 class="text-lg font-semibold mb-4 text-gray-900">Categories</h3>
+          <app-help-categories-button
+            (categorySelected)="selectCategory($event)"
+            [selectedCategory]="selectedCategory"
+          />
+        </div>
       </div>
 
-      <!-- Categories Section -->
-      <div class="flex gap-4 mb-16 flex-wrap">
-        <app-help-categories-button
-          (categorySelected)="selectCategory($event)"
-          [selectedCategory]="selectedCategory"
-        />
+      <!-- Right Column - FAQ Items -->
+      <div class="lg:w-2/3">
+        <div class="space-y-4">
+          @for (faq of filteredFaqs; track faq.id) {
+          <div class="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300">
+            <div
+              class="p-6 cursor-pointer flex justify-between items-center transition-colors duration-200 hover:bg-blue-50/50"
+              (click)="toggleFaq(faq.id)"
+            >
+              <h3 class="text-lg font-semibold text-gray-900 pr-4">{{ faq.question }}</h3>
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                  <span
+                    class="text-white text-lg font-bold transition-transform duration-300"
+                    [ngClass]="{ 'rotate-45': faq.open }"
+                    >+</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div
+              [ngClass]="{ 'max-h-96 opacity-100': faq.open, 'max-h-0 opacity-0': !faq.open }"
+              class="overflow-hidden transition-all duration-300"
+            >
+              <div class="px-6 pb-6 border-t border-gray-100">
+                <p class="text-gray-700 leading-relaxed pt-4">{{ faq.answer }}</p>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
       </div>
     </div>
 
-    <!-- FAQ Items Section -->
-    <div class="max-w-2xl">
-      @for (faq of filteredFaqs; track faq.id) {
-      <div class="mb-4 bg-white rounded-lg overflow-hidden shadow-md">
-        <div
-          class="p-5 cursor-pointer flex justify-between items-center transition-colors duration-200 hover:bg-gray-50"
-          (click)="toggleFaq(faq.id)"
-        >
-          <h3 class="text-base font-semibold text-gray-900">{{ faq.question }}</h3>
-          <span
-            class="text-2xl text-gray-600 transition-transform duration-300 shrink-0 ml-4"
-            [ngClass]="{ 'rotate-45 text-gray-900': faq.open }"
-            >+</span
-          >
-        </div>
-        <div
-          [ngClass]="{ 'max-h-96 opacity-100': faq.open, 'max-h-0 opacity-0': !faq.open }"
-          class="overflow-hidden transition-all duration-300"
-        >
-          <p class="px-5 pb-5 text-sm leading-relaxed text-gray-700">{{ faq.answer }}</p>
+    <!-- Contact Form Section -->
+    <div class="mt-20">
+      <div class="max-w-2xl mx-auto">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
+          <div class="text-center mb-8">
+            <h3 class="text-3xl font-bold mb-4 text-gray-900">Still need help?</h3>
+            <p class="text-gray-600">Can't find what you're looking for? Send us a message and we'll get back to you.</p>
+          </div>
+          
+          <form [formGroup]="contactForm" (ngSubmit)="submitContactForm()" class="space-y-6">
+            <!-- Email Input -->
+            <div>
+              <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+                @if (email?.hasError('required') || email?.invalid && (email?.dirty || email?.touched)) {
+                <span class="text-red-500 ml-1">*</span>
+                }
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="your.email@example.com"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
+                formControlName="email"
+              />
+            </div>
+
+            <!-- Message Textarea -->
+            <div>
+              <label for="message" class="block text-sm font-semibold text-gray-700 mb-2">
+                Message
+                @if (message?.hasError('required') || message?.invalid && (message?.dirty || message?.touched)) {
+                <span class="text-red-500 ml-1">*</span>
+                }
+              </label>
+              <textarea
+                id="message"
+                rows="5"
+                placeholder="Tell us how we can help you..."
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 resize-none"
+                formControlName="message"
+              ></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+              <button
+                type="submit"
+                class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center mx-auto"
+                [disabled]="contactForm.invalid || isSubmitting()"
+              >
+                @if (isSubmitting()) {
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending...
+                } @else {
+                  Send Message
+                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                  </svg>
+                }
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-      }
     </div>
   </div>
-  <div class="flex flex-col max-w-2xl m-auto mb-12 p-12">
-    <h3 class="text-2xl font-bold mb-6 text-gray-900">Contact us</h3>
-    <!-- contact form -->
-    <form [formGroup]="contactForm" (ngSubmit)="submitContactForm()">
-      <!-- email input -->
-      <div>
-        <label for="email">
-          Email @if (email?.hasError('required') || email?.invalid && (email?.dirty ||
-          email?.touched)) {
-          <span class="text-red-600 text-sm">*</span>
-          }
-        </label>
-        <input
-          id="email"
-          type="email"
-          placeholder="Your email"
-          class="border p-2 rounded w-full mb-0"
-          formControlName="email"
-        />
-      </div>
+</div>
 
-      <!-- message textarea -->
-      <div class="mt-4">
-        <label for="message">
-          Message @if (message?.hasError('required') || message?.invalid && (message?.dirty ||
-          message?.touched)) {
-          <span class="text-red-600 text-sm">*</span>
-          }
-        </label>
-        <textarea
-          id="message"
-          rows="4"
-          placeholder="Your message"
-          class="border p-2 rounded w-full mb-4"
-          formControlName="message"
-        ></textarea>
-      </div>
-
-      <!-- submit button -->
-      <button
-        type="submit"
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300 cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
-        [disabled]="contactForm.invalid || isSubmitting()"
-      >
-        {{ isSubmitting() ? 'Submitting...' : 'Submit' }}
-      </button>
-    </form>
-  </div>
-</section>
+<style>
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(15px, -25px) scale(1.05); }
+    66% { transform: translate(-10px, 10px) scale(0.95); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+  
+  .animate-blob { animation: blob 7s infinite; }
+  .animation-delay-2000 { animation-delay: 2s; }
+  
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  /* Ensure no horizontal overflow */
+  body, html {
+    overflow-x: hidden;
+  }
+</style>

@@ -44,3 +44,9 @@ Thumbs.db
 
 **/environments/*.ts
 !**/environments/*.example.ts
+
+# Environment and documentation files
+.env
+GOOGLE_AUTH_IMPLEMENTATION_COMPLETE.md
+GOOGLE_OAUTH_IMPLEMENTATION.md
+DEVELOPMENT.md

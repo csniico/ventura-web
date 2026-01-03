@@ -1,56 +1,81 @@
-<div class="h-screen flex flex-col">
-  <!-- Header -->
-  <header class="bg-white border-b border-gray-200">
+<div class="min-h-screen flex flex-col">
+  <!-- Modern Header -->
+  <header class="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <div class="shrink-0 flex items-center">
-          <span class="text-2xl font-bold text-blue-600">Ventua</span>
-        </div>
-        <nav class="hidden md:flex space-x-8">
-          <a routerLink="/" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >Home</a
-          >
-          <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >Features</a
-          >
-          <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >Pricing</a
-          >
-          <a
-            routerLink="help"
-            class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-            >Help</a
-          >
-        </nav>
+        <!-- Logo -->
         <div class="flex items-center">
-          <button
-            class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 cursor-pointer"
-          >
-            Get Started
-          </button>
+          <div class="flex-shrink-0 flex items-center">
+            <a routerLink="/" class="flex items-center hover:opacity-80 transition-opacity">
+              <div class="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <span class="text-white font-bold text-lg">V</span>
+              </div>
+              <span class="ml-2 text-xl font-bold text-primary">Ventura</span>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Navigation Links -->
+        <nav class="hidden md:flex space-x-8">
+          <a routerLink="/" routerLinkActive="text-primary font-semibold" [routerLinkActiveOptions]="{exact: true}" class="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">Home</a>
+          <a (click)="scrollToSection('features')" class="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium transition-colors cursor-pointer">Features</a>
+          <a (click)="scrollToSection('how-it-works')" class="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium transition-colors cursor-pointer">How it Works</a>
+          <a routerLink="/help" routerLinkActive="text-primary font-semibold" class="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">Help</a>
+        </nav>
+        
+        <!-- Auth Buttons -->
+        <div class="flex items-center space-x-4">
+          <a routerLink="/auth/login" class="text-gray-600 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">Sign In</a>
+          <a routerLink="/auth/register" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">Get Started</a>
         </div>
       </div>
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="grow">
+  <main class="flex-1">
     <router-outlet />
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-white border-t border-gray-200 py-6">
+  <!-- Modern Footer -->
+  <footer class="bg-gray-900 text-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="text-gray-500 text-sm">&copy; 2025 Ventua. All rights reserved.</div>
-        <div class="flex space-x-6 mt-4 md:mt-0">
-          <a routerLink="/governance/privacy-policy" class="text-gray-400 hover:text-gray-500"
-            >Privacy Policy</a
-          >
-          <a routerLink="/governance/terms-of-use" class="text-gray-400 hover:text-gray-500"
-            >Terms of Use</a
-          >
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <!-- Company Info -->
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center mb-4">
+            <div class="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+              <span class="text-white font-bold text-lg">V</span>
+            </div>
+            <span class="ml-2 text-xl font-bold">Ventura</span>
+          </div>
+          <p class="text-gray-400 mb-4 max-w-md">
+            The all-in-one business management platform that helps entrepreneurs streamline their operations and grow faster.
+          </p>
         </div>
+        
+        <!-- Quick Links -->
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Product</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a (click)="scrollToSection('features')" class="hover:text-white transition-colors cursor-pointer">Features</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Pricing</a></li>
+            <li><a routerLink="/help" class="hover:text-white transition-colors">Help</a></li>
+          </ul>
+        </div>
+        
+        <!-- Support -->
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Support</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a routerLink="/governance/privacy-policy" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a routerLink="/governance/terms-of-use" class="hover:text-white transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2025 Ventura. All rights reserved. Built with ❤️ for modern business owners.</p>
       </div>
     </div>
   </footer>
