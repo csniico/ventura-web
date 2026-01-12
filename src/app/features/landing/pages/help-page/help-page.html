@@ -16,7 +16,7 @@
       
       <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
         How can we
-        <span class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <span class="text-primary">
           help you?
         </span>
       </h1>
@@ -60,7 +60,7 @@
             >
               <h3 class="text-lg font-semibold text-gray-900 pr-4">{{ faq.question }}</h3>
               <div class="flex-shrink-0">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                   <span
                     class="text-white text-lg font-bold transition-transform duration-300"
                     [ngClass]="{ 'rotate-45': faq.open }"
@@ -131,7 +131,7 @@
             <div class="text-center">
               <button
                 type="submit"
-                class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center mx-auto"
+                class="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center mx-auto"
                 [disabled]="contactForm.invalid || isSubmitting()"
               >
                 @if (isSubmitting()) {
