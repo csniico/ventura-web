@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { UserService } from './user.service';
 import {
   LoginDto,
   SignUpDto,
@@ -24,6 +25,7 @@ import {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private userService = inject(UserService);
 
   // Public readonly signals
   readonly user = signal<User | null>(null);
@@ -161,6 +163,23 @@ export class AuthService {
     // Redirect to backend Google OAuth endpoint
     const googleAuthUrl = `${environment.apiUrl}${API_ENDPOINTS.AUTH.GOOGLE_LOGIN}`;
     window.location.href = googleAuthUrl;
+  }
+
+  // Fetch user data by ID (for Google OAuth callback)
+  fetchUserById(userId: string): Observable<User> {
+    this.setLoading(true);
+    this.clearError();
+
+    return this.userService.getUserById(userId).pipe(
+      tap((user) => {
+        this.setLoading(false);
+        this.handleLoginSuccess(user);
+      }),
+      catchError((error) => {
+        this.handleAuthError('Failed to fetch user data. Please try again.');
+        return throwError(() => error);
+      })
+    );
   }
 
   // Handle successful login

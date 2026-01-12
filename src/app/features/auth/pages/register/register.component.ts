@@ -36,7 +36,10 @@ export class RegisterComponent implements OnDestroy {
   get email() { return this.registerForm.get('email'); }
   get password() { return this.registerForm.get('password'); }
 
-protected onGoogleSignUp(): void {  }  // Google sign up uses the same OAuth flow as sign in    this.authService.loginWithGoogle();
+protected onGoogleSignUp(): void {
+    // Google sign up uses the same OAuth flow as sign in
+    this.authService.loginWithGoogle();
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
