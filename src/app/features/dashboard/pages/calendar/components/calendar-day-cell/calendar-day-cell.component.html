@@ -1,0 +1,39 @@
+<div
+  (click)="onDayClick($event)"
+  class="min-h-[100px] p-1.5 border-b border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+  [class.bg-white]="day.isCurrentMonth"
+  [class.bg-gray-50]="!day.isCurrentMonth"
+>
+  <!-- Day Number -->
+  <div class="flex items-center justify-center mb-1">
+    <span
+      class="inline-flex items-center justify-center w-7 h-7 text-sm font-medium rounded-full"
+      [class.bg-blue-600]="day.isToday"
+      [class.text-white]="day.isToday"
+      [class.text-gray-900]="day.isCurrentMonth && !day.isToday"
+      [class.text-gray-400]="!day.isCurrentMonth"
+    >
+      {{ dayNumber }}
+    </span>
+  </div>
+
+  <!-- Appointments -->
+  <div class="space-y-1">
+    @for (appointment of visibleAppointments; track appointment.id) {
+      <div
+        (click)="onAppointmentClick(appointment, $event)"
+        class="appointment-pill group px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-800 truncate cursor-pointer hover:bg-blue-200 transition-colors"
+        [title]="appointment.title + ' - ' + formatTime(appointment.startTime)"
+      >
+        <span class="font-medium">{{ formatTime(appointment.startTime) }}</span>
+        <span class="hidden sm:inline ml-1">{{ appointment.title }}</span>
+      </div>
+    }
+
+    @if (remainingCount > 0) {
+      <div class="px-1.5 py-0.5 text-xs text-gray-500 font-medium">
+        +{{ remainingCount }} more
+      </div>
+    }
+  </div>
+</div>

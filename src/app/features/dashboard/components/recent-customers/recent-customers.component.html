@@ -1,0 +1,84 @@
+<div class="bg-white rounded-lg border border-gray-200">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+    <h3 class="text-base font-semibold text-gray-900">Recent Customers</h3>
+    <a
+      routerLink="/dashboard/customers"
+      class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+    >
+      View all
+    </a>
+  </div>
+
+  <!-- Content -->
+  <div class="p-5">
+    @if (isLoading) {
+      <!-- Loading skeleton -->
+      <div class="space-y-3">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="animate-pulse flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div class="flex-1">
+              <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+              <div class="h-3 bg-gray-200 rounded w-40"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (customers.length === 0) {
+      <!-- Empty state -->
+      <div class="text-center py-8">
+        <div class="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <p class="text-sm text-gray-500 mb-3">No customers yet</p>
+        <a
+          routerLink="/dashboard/customers"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add your first customer
+        </a>
+      </div>
+    } @else {
+      <!-- Customer list -->
+      <div class="space-y-2">
+        @for (customer of customers; track customer.id) {
+          <div
+            class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            <!-- Avatar -->
+            <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <span class="text-sm font-medium text-gray-600">
+                {{ getInitials(customer.name) }}
+              </span>
+            </div>
+
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ customer.name }}</p>
+              <p class="text-xs text-gray-500 truncate">
+                @if (customer.email) {
+                  {{ customer.email }}
+                } @else if (customer.phone) {
+                  {{ customer.phone }}
+                } @else {
+                  No contact info
+                }
+              </p>
+            </div>
+
+            <!-- Date added -->
+            <div class="flex-shrink-0 text-right">
+              <p class="text-xs text-gray-400">{{ getRelativeDate(customer.createdAt) }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

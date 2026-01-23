@@ -14,14 +14,7 @@ import { RouterLink } from '@angular/router';
       <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
       
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
-        <div class="text-center">
-          <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium mb-8">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
-            Trusted by 10,000+ business owners
-          </div>
-          
+        <div class="text-center">          
           <h1 class="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             Your Business,
             <span class="text-primary">

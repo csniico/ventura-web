@@ -1,0 +1,21 @@
+<div class="bg-white rounded-b-lg overflow-hidden border border-t-0 border-gray-200">
+  <!-- Week Days Header -->
+  <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+    @for (day of weekDays; track day) {
+      <div class="py-3 text-center text-sm font-medium text-gray-500 border-r border-gray-200 last:border-r-0">
+        {{ day }}
+      </div>
+    }
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="grid grid-cols-7">
+    @for (day of monthDays(); track day.date.toISOString()) {
+      <app-calendar-day-cell
+        [day]="day"
+        (dayClick)="onDayClick($event)"
+        (appointmentClick)="onAppointmentClick($event)"
+      />
+    }
+  </div>
+</div>

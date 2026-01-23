@@ -1,0 +1,306 @@
+@if (isOpen) {
+  <div class="fixed inset-0 z-50 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-900/50" (click)="onClose()"></div>
+
+    <!-- Modal -->
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+      <div class="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            @if (viewMode && invoice) {
+              Invoice {{ invoice.invoiceNumber }}
+            } @else {
+              Create Invoice
+            }
+          </h2>
+          <button
+            (click)="onClose()"
+            class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="px-6 py-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+          @if (viewMode && invoice) {
+            <!-- View Mode -->
+            <div class="space-y-6">
+              <!-- Status Badge -->
+              <div class="flex items-center justify-between">
+                <span
+                  class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full"
+                  [ngClass]="getStatusClasses(invoice.status)"
+                >
+                  {{ invoice.status }}
+                </span>
+                <span class="text-sm text-gray-500">Created {{ invoice.createdAt | date:'MMM d, y' }}</span>
+              </div>
+
+              <!-- Customer Info -->
+              <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-500 mb-2">Customer</h3>
+                <p class="font-medium text-gray-900">{{ invoice.customer?.name || 'Unknown' }}</p>
+                <p class="text-sm text-gray-600">{{ invoice.customer?.email || '-' }}</p>
+                @if (invoice.customer?.phone) {
+                  <p class="text-sm text-gray-600">{{ invoice.customer?.phone }}</p>
+                }
+              </div>
+
+              <!-- Orders -->
+              @if (invoice.orders && invoice.orders.length > 0) {
+                <div>
+                  <h3 class="text-sm font-medium text-gray-500 mb-2">Orders Included</h3>
+                  <div class="space-y-2">
+                    @for (order of invoice.orders; track order.id) {
+                      <div class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                        <span class="font-medium text-gray-900">{{ order.orderNumber }}</span>
+                        <span class="text-sm text-gray-600">{{ order.totalAmount | currency:'GHS ' }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Financial Summary -->
+              <div class="border-t border-gray-200 pt-4">
+                <h3 class="text-sm font-medium text-gray-500 mb-3">Financial Summary</h3>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span class="text-gray-900">{{ invoice.subtotal | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">VAT (15%)</span>
+                    <span class="text-gray-900">{{ invoice.vatAmount | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">NHIL (2.5%)</span>
+                    <span class="text-gray-900">{{ invoice.nhilAmount | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">GETFund (2.5%)</span>
+                    <span class="text-gray-900">{{ invoice.getfundAmount | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm border-t border-gray-200 pt-2">
+                    <span class="text-gray-600">Total Tax</span>
+                    <span class="text-gray-900">{{ invoice.totalTax | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between font-medium text-base border-t border-gray-200 pt-2">
+                    <span class="text-gray-900">Total Amount</span>
+                    <span class="text-gray-900">{{ invoice.totalAmount | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Amount Paid</span>
+                    <span class="text-green-600">{{ invoice.amountPaid | currency:'GHS ' }}</span>
+                  </div>
+                  <div class="flex justify-between font-medium text-sm">
+                    <span class="text-gray-600">Balance Due</span>
+                    <span class="text-gray-900">{{ (invoice.totalAmount - invoice.amountPaid) | currency:'GHS ' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Due Date -->
+              @if (invoice.dueDate) {
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-500">Due Date</span>
+                  <span class="font-medium text-gray-900">{{ invoice.dueDate | date:'MMM d, y' }}</span>
+                </div>
+              }
+
+              <!-- Notes -->
+              @if (invoice.notes) {
+                <div>
+                  <h3 class="text-sm font-medium text-gray-500 mb-2">Notes</h3>
+                  <p class="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{{ invoice.notes }}</p>
+                </div>
+              }
+            </div>
+          } @else {
+            <!-- Create Mode -->
+            <form (ngSubmit)="onSubmit()" class="space-y-6">
+              <!-- Customer Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Customer *</label>
+                <select
+                  [ngModel]="selectedCustomerId()"
+                  (ngModelChange)="onCustomerChange($event)"
+                  name="customer"
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a customer</option>
+                  @for (customer of customers; track customer.id) {
+                    <option [value]="customer.id">{{ customer.name }} ({{ customer.email }})</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Orders Selection -->
+              @if (selectedCustomerId()) {
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Select Orders *</label>
+                    @if (customerOrders().length > 0) {
+                      <div class="flex gap-2">
+                        <button
+                          type="button"
+                          (click)="selectAllOrders()"
+                          class="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          Select All
+                        </button>
+                        <span class="text-gray-300">|</span>
+                        <button
+                          type="button"
+                          (click)="deselectAllOrders()"
+                          class="text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          Deselect All
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                  @if (customerOrders().length === 0) {
+                    <div class="text-sm text-gray-500 bg-gray-50 rounded-lg p-4 text-center">
+                      No completed orders available for this customer
+                    </div>
+                  } @else {
+                    <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                      @for (order of customerOrders(); track order.id) {
+                        <label
+                          class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                          [class.ring-2]="selectedOrderIds().includes(order.id)"
+                          [class.ring-blue-500]="selectedOrderIds().includes(order.id)"
+                        >
+                          <input
+                            type="checkbox"
+                            [checked]="selectedOrderIds().includes(order.id)"
+                            (change)="toggleOrder(order.id)"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <div class="ml-3 flex-1">
+                            <div class="flex items-center justify-between">
+                              <span class="font-medium text-gray-900">{{ order.orderNumber }}</span>
+                              <span class="text-sm font-medium text-gray-900">{{ order.totalAmount | currency:'GHS ' }}</span>
+                            </div>
+                            <p class="text-xs text-gray-500">{{ order.items.length }} item(s) - {{ order.createdAt | date:'MMM d, y' }}</p>
+                          </div>
+                        </label>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Invoice Type -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Type</label>
+                <select
+                  [ngModel]="invoiceType()"
+                  (ngModelChange)="invoiceType.set($event)"
+                  name="invoiceType"
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option [value]="InvoiceType.STANDARD">Standard Invoice</option>
+                  <option [value]="InvoiceType.PROFORMA">Proforma Invoice</option>
+                  <option [value]="InvoiceType.RECEIPT">Receipt</option>
+                </select>
+              </div>
+
+              <!-- Due Date -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
+                <input
+                  type="date"
+                  [ngModel]="dueDate()"
+                  (ngModelChange)="dueDate.set($event)"
+                  name="dueDate"
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <!-- Notes -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <textarea
+                  [ngModel]="notes()"
+                  (ngModelChange)="notes.set($event)"
+                  name="notes"
+                  rows="3"
+                  placeholder="Add any notes or payment instructions..."
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+              </div>
+
+              <!-- Summary -->
+              @if (selectedOrderIds().length > 0) {
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">Invoice Summary</h4>
+                  <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Subtotal</span>
+                      <span class="text-gray-900">{{ subtotal() | currency:'GHS ' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">VAT (15%)</span>
+                      <span class="text-gray-900">{{ vatAmount() | currency:'GHS ' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">NHIL (2.5%)</span>
+                      <span class="text-gray-900">{{ nhilAmount() | currency:'GHS ' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">GETFund (2.5%)</span>
+                      <span class="text-gray-900">{{ getfundAmount() | currency:'GHS ' }}</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-200 pt-2 font-medium">
+                      <span class="text-gray-900">Total</span>
+                      <span class="text-gray-900">{{ totalAmount() | currency:'GHS ' }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </form>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <button
+            type="button"
+            (click)="onClose()"
+            class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            {{ viewMode ? 'Close' : 'Cancel' }}
+          </button>
+          @if (!viewMode) {
+            <button
+              type="button"
+              (click)="onSubmit()"
+              [disabled]="!isValid() || isSubmitting()"
+              class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+            >
+              @if (isSubmitting()) {
+                <span class="flex items-center">
+                  <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating...
+                </span>
+              } @else {
+                Create Invoice
+              }
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

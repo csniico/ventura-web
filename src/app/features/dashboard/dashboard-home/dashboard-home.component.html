@@ -1,0 +1,109 @@
+<!-- Greeting Section -->
+<div class="mb-6 lg:mb-8">
+  <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+    {{ greeting() }}, {{ user()?.firstName || 'there' }}
+  </h1>
+  <p class="text-sm text-gray-500 mt-1">{{ currentDate() }}</p>
+</div>
+
+<!-- Loading State -->
+@if (isLoading()) {
+  <div class="animate-pulse space-y-6">
+    <!-- Stats skeleton -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="bg-white rounded-lg border border-gray-200 p-5">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div class="flex-1">
+              <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+              <div class="h-6 bg-gray-200 rounded w-16"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Content skeleton -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+      <div class="bg-white rounded-lg border border-gray-200 p-5 h-80">
+        <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+        <div class="space-y-3">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="h-16 bg-gray-200 rounded"></div>
+          }
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-5 h-80">
+        <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+        <div class="space-y-3">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="h-16 bg-gray-200 rounded"></div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+} @else {
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+    <app-stat-card
+      title="Today's Appointments"
+      [value]="stats().todayAppointments"
+      subtitle="scheduled today"
+      iconType="calendar"
+      iconColorClass="text-blue-600"
+      iconBgClass="bg-blue-50"
+    />
+
+    <app-stat-card
+      title="Total Customers"
+      [value]="stats().totalCustomers"
+      subtitle="registered"
+      iconType="users"
+      iconColorClass="text-emerald-600"
+      iconBgClass="bg-emerald-50"
+    />
+
+    <app-stat-card
+      title="This Week"
+      [value]="stats().upcomingAppointments"
+      subtitle="appointments"
+      iconType="clock"
+      iconColorClass="text-violet-600"
+      iconBgClass="bg-violet-50"
+    />
+
+    <app-stat-card
+      title="Products & Services"
+      [value]="stats().totalResources"
+      subtitle="listed"
+      iconType="package"
+      iconColorClass="text-amber-600"
+      iconBgClass="bg-amber-50"
+    />
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+    <app-today-schedule
+      [appointments]="todayAppointments()"
+      [isLoading]="appointmentsLoading()"
+      (appointmentClick)="onAppointmentClick($event)"
+    />
+
+    <app-recent-customers
+      [customers]="recentCustomers()"
+      [isLoading]="customersLoading()"
+    />
+  </div>
+
+  <!-- Quick Actions -->
+  <app-quick-actions (actionClicked)="onQuickAction($event)" />
+}
+
+<!-- Appointment Modal -->
+<app-appointment-modal />
+
+<!-- Delete Confirmation Modal -->
+<app-delete-confirmation-modal />

@@ -1,0 +1,190 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Orders</h1>
+      <p class="text-sm text-gray-500 mt-1">Manage and track your customer orders</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      New Order
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Total Orders</p>
+          <p class="text-xl font-semibold text-gray-900">{{ orderState.stats()?.totalOrders || 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Pending</p>
+          <p class="text-xl font-semibold text-gray-900">{{ orderState.stats()?.pendingOrders || 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Completed</p>
+          <p class="text-xl font-semibold text-gray-900">{{ orderState.stats()?.completedOrders || 0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Revenue</p>
+          <p class="text-xl font-semibold text-gray-900">{{ (orderState.stats()?.totalRevenue || 0) | currency:'GHS ' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Table Card -->
+  <div class="bg-white rounded-lg border border-gray-200">
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+      <nav class="flex -mb-px">
+        @for (tab of tabs; track tab.key) {
+          <button
+            (click)="onTabChange(tab.key)"
+            [class]="orderState.activeTab() === tab.key
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors"
+          >
+            <div class="flex items-center justify-center">
+              {{ tab.label }}
+              <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+                {{ getTabCount(tab.key) }}
+              </span>
+            </div>
+          </button>
+        }
+      </nav>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="p-4 border-b border-gray-100">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="flex-1 w-full sm:max-w-md">
+          <app-search-input
+            placeholder="Search by order number or customer..."
+            (search)="onSearch($event)"
+          />
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-500">Sort by:</span>
+          <select
+            (change)="onSortChange($event)"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          >
+            <option value="createdAt-desc">Newest First</option>
+            <option value="createdAt-asc">Oldest First</option>
+            <option value="totalAmount-desc">Amount High-Low</option>
+            <option value="totalAmount-asc">Amount Low-High</option>
+            <option value="orderNumber-asc">Order # A-Z</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="p-4">
+      <app-order-list
+        [orders]="orderState.paginatedOrders()"
+        [isLoading]="orderState.ordersLoading()"
+        [totalOrders]="orderState.displayedTotalOrders()"
+        [currentPage]="orderState.currentPage()"
+        [pageSize]="orderState.pageSize()"
+        (orderView)="onViewOrder($event)"
+        (orderStatusChange)="onStatusChange($event)"
+        (pageChange)="onPageChange($event)"
+        (createOrder)="openCreateModal()"
+      />
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  @if (toastMessage()) {
+    <div
+      class="fixed bottom-4 right-4 z-50"
+      [class]="toastType() === 'success' ? 'bg-green-600' : 'bg-red-600'"
+    >
+      <div class="flex items-center px-4 py-3 rounded-lg shadow-lg text-white">
+        @if (toastType() === 'success') {
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        } @else {
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        }
+        <span class="text-sm font-medium">{{ toastMessage() }}</span>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Create Order Modal -->
+<app-order-modal
+  [isOpen]="orderState.isModalOpen() && orderState.modalMode() === 'create'"
+  [customers]="orderState.customers()"
+  [businessId]="businessId()"
+  (save)="onSaveOrder($event)"
+  (close)="orderState.closeModal()"
+/>
+
+<!-- View Order Modal -->
+@if (orderState.isModalOpen() && orderState.modalMode() === 'view' && orderState.selectedOrder()) {
+  <app-order-modal
+    [isOpen]="true"
+    [order]="orderState.selectedOrder()"
+    [viewMode]="true"
+    [businessId]="businessId()"
+    (close)="orderState.closeModal()"
+  />
+}
+
+<!-- Status Update Modal -->
+@if (orderState.isStatusModalOpen() && orderState.orderToUpdate()) {
+  <app-order-status-modal
+    [isOpen]="true"
+    [order]="orderState.orderToUpdate()!"
+    (save)="onUpdateStatus($event)"
+    (close)="orderState.closeStatusModal()"
+  />
+}

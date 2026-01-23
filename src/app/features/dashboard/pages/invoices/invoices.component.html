@@ -1,0 +1,203 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Invoices</h1>
+      <p class="text-sm text-gray-500 mt-1">Generate invoices, record payments, and track due dates</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      New Invoice
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Total Invoices</p>
+          <p class="text-xl font-semibold text-gray-900">{{ invoiceState.invoiceCounts().all }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Pending</p>
+          <p class="text-xl font-semibold text-gray-900">{{ invoiceState.invoiceCounts().sent + invoiceState.invoiceCounts().draft }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Overdue</p>
+          <p class="text-xl font-semibold text-gray-900">{{ invoiceState.invoiceCounts().overdue }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-500">Outstanding</p>
+          <p class="text-xl font-semibold text-gray-900">{{ invoiceState.totalOutstanding() | currency:'GHS ' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoices Table Card -->
+  <div class="bg-white rounded-lg border border-gray-200">
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+      <nav class="flex -mb-px">
+        @for (tab of tabs; track tab.key) {
+          <button
+            (click)="onTabChange(tab.key)"
+            [class]="invoiceState.activeTab() === tab.key
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors"
+          >
+            <div class="flex items-center justify-center">
+              {{ tab.label }}
+              <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+                {{ getTabCount(tab.key) }}
+              </span>
+            </div>
+          </button>
+        }
+      </nav>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="p-4 border-b border-gray-100">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="flex-1 w-full sm:max-w-md">
+          <app-search-input
+            placeholder="Search by invoice number or customer..."
+            (search)="onSearch($event)"
+          />
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-500">Sort by:</span>
+          <select
+            (change)="onSortChange($event)"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          >
+            <option value="createdAt-desc">Newest First</option>
+            <option value="createdAt-asc">Oldest First</option>
+            <option value="dueDate-asc">Due Date (Soonest)</option>
+            <option value="dueDate-desc">Due Date (Latest)</option>
+            <option value="totalAmount-desc">Amount High-Low</option>
+            <option value="totalAmount-asc">Amount Low-High</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoices List -->
+    <div class="p-4">
+      <app-invoice-list
+        [invoices]="invoiceState.paginatedInvoices()"
+        [isLoading]="invoiceState.invoicesLoading()"
+        [totalInvoices]="invoiceState.displayedTotalInvoices()"
+        [currentPage]="invoiceState.currentPage()"
+        [pageSize]="invoiceState.pageSize()"
+        (invoiceView)="onViewInvoice($event)"
+        (invoicePayment)="onRecordPayment($event)"
+        (invoiceStatusChange)="onUpdateStatus($event)"
+        (pageChange)="onPageChange($event)"
+        (createInvoice)="openCreateModal()"
+      />
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  @if (toastMessage()) {
+    <div
+      class="fixed bottom-4 right-4 z-50"
+      [class]="toastType() === 'success' ? 'bg-green-600' : 'bg-red-600'"
+    >
+      <div class="flex items-center px-4 py-3 rounded-lg shadow-lg text-white">
+        @if (toastType() === 'success') {
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        } @else {
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        }
+        <span class="text-sm font-medium">{{ toastMessage() }}</span>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Create Invoice Modal -->
+<app-invoice-modal
+  [isOpen]="invoiceState.isModalOpen() && invoiceState.modalMode() === 'create'"
+  [customers]="invoiceState.customers()"
+  [availableOrders]="invoiceState.availableOrders()"
+  [businessId]="businessId()"
+  (save)="onSaveInvoice($event)"
+  (close)="invoiceState.closeModal()"
+/>
+
+<!-- View Invoice Modal -->
+@if (invoiceState.isModalOpen() && invoiceState.modalMode() === 'view' && invoiceState.selectedInvoice()) {
+  <app-invoice-modal
+    [isOpen]="true"
+    [invoice]="invoiceState.selectedInvoice()"
+    [viewMode]="true"
+    [businessId]="businessId()"
+    (close)="invoiceState.closeModal()"
+  />
+}
+
+<!-- Payment Modal -->
+@if (invoiceState.isPaymentModalOpen() && invoiceState.invoiceForPayment()) {
+  <app-invoice-payment-modal
+    [isOpen]="true"
+    [invoice]="invoiceState.invoiceForPayment()!"
+    (save)="onSavePayment($event)"
+    (close)="invoiceState.closePaymentModal()"
+  />
+}
+
+<!-- Status Update Modal -->
+@if (invoiceState.isStatusModalOpen() && invoiceState.invoiceForStatus()) {
+  <app-invoice-status-modal
+    [isOpen]="true"
+    [invoice]="invoiceState.invoiceForStatus()!"
+    (save)="onSaveStatus($event)"
+    (close)="invoiceState.closeStatusModal()"
+  />
+}

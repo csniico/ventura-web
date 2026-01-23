@@ -1,0 +1,251 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Products & Services</h1>
+      <p class="text-sm text-gray-500 mt-1">Manage your inventory and service offerings</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      {{ resourceState.activeTab() === 'products' ? 'Add Product' : 'Add Service' }}
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  @if (resourceState.activeTab() === 'products') {
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-500">Total Products</p>
+            <p class="text-xl font-semibold text-gray-900">{{ resourceState.productStats().total }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-500">Inventory Value</p>
+            <p class="text-xl font-semibold text-gray-900">{{ resourceState.productStats().totalValue | currency:'GHS ' }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-500">Low Stock</p>
+            <p class="text-xl font-semibold text-gray-900">{{ resourceState.productStats().lowStock }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-500">Out of Stock</p>
+            <p class="text-xl font-semibold text-gray-900">{{ resourceState.productStats().outOfStock }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-500">Total Services</p>
+            <p class="text-xl font-semibold text-gray-900">{{ resourceState.serviceStats().total }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-500">Average Price</p>
+            <p class="text-xl font-semibold text-gray-900">{{ resourceState.serviceStats().averagePrice | currency:'GHS ' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tabs and Search -->
+  <div class="bg-white rounded-lg border border-gray-200">
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+      <nav class="flex -mb-px">
+        <button
+          (click)="resourceState.setActiveTab('products')"
+          [class]="resourceState.activeTab() === 'products'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors"
+        >
+          <div class="flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            Products
+            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+              {{ resourceState.products().length }}
+            </span>
+          </div>
+        </button>
+        <button
+          (click)="resourceState.setActiveTab('services')"
+          [class]="resourceState.activeTab() === 'services'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors"
+        >
+          <div class="flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            Services
+            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+              {{ resourceState.services().length }}
+            </span>
+          </div>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="p-4 border-b border-gray-100">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="flex-1 w-full sm:max-w-md">
+          <app-search-input
+            [placeholder]="resourceState.activeTab() === 'products' ? 'Search products...' : 'Search services...'"
+            (search)="onSearch($event)"
+          />
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-500">Sort by:</span>
+          <select
+            (change)="onSortChange($event)"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          >
+            <option value="createdAt-desc">Newest First</option>
+            <option value="createdAt-asc">Oldest First</option>
+            <option value="name-asc">Name A-Z</option>
+            <option value="name-desc">Name Z-A</option>
+            <option value="price-asc">Price Low-High</option>
+            <option value="price-desc">Price High-Low</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="p-4">
+      @if (resourceState.activeTab() === 'products') {
+        <app-product-list
+          [products]="resourceState.paginatedProducts()"
+          [isLoading]="resourceState.productsLoading()"
+          [totalProducts]="resourceState.totalProducts()"
+          [currentPage]="resourceState.currentPage()"
+          [pageSize]="resourceState.pageSize()"
+          (productEdit)="openEditProductModal($event)"
+          (productDelete)="onDeleteProduct($event)"
+          (pageChange)="onPageChange($event)"
+          (createProduct)="openCreateModal()"
+        />
+      } @else {
+        <app-service-list
+          [services]="resourceState.paginatedServices()"
+          [isLoading]="resourceState.servicesLoading()"
+          [totalServices]="resourceState.totalServices()"
+          [currentPage]="resourceState.currentPage()"
+          [pageSize]="resourceState.pageSize()"
+          (serviceEdit)="openEditServiceModal($event)"
+          (serviceDelete)="onDeleteService($event)"
+          (pageChange)="onPageChange($event)"
+          (createService)="openCreateModal()"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  @if (toastMessage()) {
+    <div
+      class="fixed bottom-4 right-4 z-50"
+      [class]="toastType() === 'success' ? 'bg-green-600' : 'bg-red-600'"
+    >
+      <div class="flex items-center px-4 py-3 rounded-lg shadow-lg text-white">
+        @if (toastType() === 'success') {
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        } @else {
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        }
+        <span class="text-sm font-medium">{{ toastMessage() }}</span>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Product Modal -->
+<app-product-modal
+  [isOpen]="resourceState.isModalOpen() && resourceState.activeTab() === 'products'"
+  [product]="resourceState.selectedProduct()"
+  [businessId]="businessId()"
+  (save)="onSaveProduct($event)"
+  (close)="resourceState.closeModal()"
+/>
+
+<!-- Service Modal -->
+<app-service-modal
+  [isOpen]="resourceState.isModalOpen() && resourceState.activeTab() === 'services'"
+  [service]="resourceState.selectedService()"
+  [businessId]="businessId()"
+  (save)="onSaveService($event)"
+  (close)="resourceState.closeModal()"
+/>
+
+<!-- Delete Confirmation -->
+@if (resourceState.isDeleteModalOpen()) {
+  <app-delete-confirmation
+    [data]="deleteConfirmationData()"
+    (confirm)="onConfirmDelete()"
+    (cancel)="resourceState.closeDeleteModal()"
+  />
+}

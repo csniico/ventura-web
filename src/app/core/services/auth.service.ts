@@ -158,6 +158,17 @@ export class AuthService {
     });
   }
 
+  // Refresh access token using refresh token (called by interceptor)
+  refreshToken(): Observable<void> {
+    return this.http.post<void>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {});
+  }
+
+  // Force logout (called when refresh token fails)
+  forceLogout(): void {
+    this.clearAuthState();
+    this.router.navigate(['/auth/login']);
+  }
+
   // Initiate Google OAuth login
   loginWithGoogle(): void {
     // Redirect to backend Google OAuth endpoint

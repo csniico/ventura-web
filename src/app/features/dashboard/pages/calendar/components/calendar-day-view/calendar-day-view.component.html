@@ -1,0 +1,115 @@
+<div class="flex-1 bg-white rounded-b-lg border border-t-0 border-gray-200 overflow-hidden">
+  <div class="flex h-[600px]">
+    <!-- Main Schedule Column -->
+    <div class="flex-1 flex flex-col">
+      <!-- Day Header -->
+      <div
+        class="py-4 px-6 border-b border-gray-200 text-center"
+        [class.bg-blue-50]="isToday()"
+      >
+        <h2
+          class="text-lg font-semibold"
+          [class.text-blue-600]="isToday()"
+          [class.text-gray-900]="!isToday()"
+        >
+          {{ dayLabel() }}
+        </h2>
+        @if (isToday()) {
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 mt-1">
+            Today
+          </span>
+        }
+      </div>
+
+      <!-- Time Grid -->
+      <div class="flex-1 overflow-y-auto">
+        <div class="flex">
+          <!-- Time labels -->
+          <div class="w-20 flex-shrink-0 border-r border-gray-200 bg-gray-50">
+            @for (hourSlot of hours; track hourSlot.hour) {
+              <div class="h-16 relative border-b border-gray-100">
+                <span class="absolute top-0 right-3 text-xs text-gray-500 font-medium">
+                  {{ hourSlot.label }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Schedule area -->
+          <div class="flex-1">
+            @for (hourSlot of hours; track hourSlot.hour) {
+              <div
+                class="h-16 border-b border-gray-100 relative cursor-pointer hover:bg-gray-50 transition-colors"
+                (click)="onTimeSlotClick(hourSlot.hour)"
+              >
+                <!-- Half-hour line -->
+                <div class="absolute left-0 right-0 top-1/2 border-t border-gray-100 border-dashed"></div>
+
+                <!-- Appointments for this hour -->
+                @for (appointment of getAppointmentsForHour(hourSlot.hour); track appointment.id) {
+                  <div
+                    class="absolute left-1 right-1 rounded-lg px-3 py-1 border-l-4 cursor-pointer shadow-sm z-10"
+                    [ngClass]="getAppointmentColor(appointment)"
+                    [ngStyle]="getAppointmentStyle(appointment)"
+                    (click)="onAppointmentClick($event, appointment)"
+                  >
+                    <div class="font-medium text-sm truncate">{{ appointment.title }}</div>
+                    <div class="text-xs opacity-75">
+                      {{ formatTimeRange(appointment.startTime, appointment.endTime) }}
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day Summary Sidebar -->
+    <div class="w-72 border-l border-gray-200 bg-gray-50 flex flex-col">
+      <div class="px-4 py-3 border-b border-gray-200">
+        <h3 class="font-semibold text-gray-900">Today's Appointments</h3>
+        <p class="text-sm text-gray-500">{{ dayAppointments().length }} scheduled</p>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4">
+        @if (dayAppointments().length === 0) {
+          <div class="text-center py-8">
+            <div class="w-12 h-12 mx-auto bg-gray-200 rounded-full flex items-center justify-center mb-3">
+              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <p class="text-sm text-gray-500">No appointments</p>
+            <p class="text-xs text-gray-400 mt-1">Click on a time slot to create one</p>
+          </div>
+        } @else {
+          <div class="space-y-3">
+            @for (appointment of dayAppointments(); track appointment.id) {
+              <div
+                class="bg-white rounded-lg p-3 border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
+                (click)="appointmentClick.emit(appointment)"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-medium text-gray-900 truncate">{{ appointment.title }}</h4>
+                    <p class="text-sm text-gray-500">
+                      {{ formatTimeRange(appointment.startTime, appointment.endTime) }}
+                    </p>
+                  </div>
+                  <span
+                    class="w-2 h-2 rounded-full flex-shrink-0 mt-2"
+                    [ngClass]="{
+                      'bg-blue-500': true
+                    }"
+                  ></span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
