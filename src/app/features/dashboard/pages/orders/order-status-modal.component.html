@@ -1,0 +1,57 @@
+@if (isOpen) {
+  <div class="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-lg font-semibold text-gray-900">Update Order Status</h3>
+        <p class="text-sm text-gray-500 mt-0.5">{{ order.orderNumber }}</p>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6 space-y-3">
+        <p class="text-sm text-gray-600 mb-4">Select the new status for this order:</p>
+
+        @for (status of availableStatuses; track status.value) {
+          <button
+            type="button"
+            (click)="selectStatus(status.value)"
+            [class]="selectedStatus() === status.value
+              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
+            class="w-full p-4 text-left border rounded-lg transition-all"
+          >
+            <div class="flex items-center">
+              <span
+                class="w-3 h-3 rounded-full mr-3"
+                [ngClass]="getStatusDotColor(status.value)"
+              ></span>
+              <div>
+                <p class="text-sm font-medium text-gray-900">{{ status.label }}</p>
+                <p class="text-xs text-gray-500">{{ status.description }}</p>
+              </div>
+            </div>
+          </button>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="onConfirm()"
+          [disabled]="!selectedStatus() || selectedStatus() === order.status"
+          class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Update Status
+        </button>
+      </div>
+    </div>
+  </div>
+}

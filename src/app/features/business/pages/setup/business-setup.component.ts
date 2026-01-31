@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } fr
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
-import { BusinessService } from '../../services/business.service';
+import { BusinessService } from '../../../../core/services/business.service';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { LoadingSpinnerComponent } from '../../../auth/components/loading-spinner.component';
 import { StepIndicatorComponent } from '../../components/step-indicator.component';
