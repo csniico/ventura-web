@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Customer, CreateCustomerDto } from '../../shared/models/customer.model';
-import { API_ENDPOINTS } from '../../shared/api.constants';
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -68,8 +67,9 @@ export class CustomerService {
    * Update an existing customer
    */
   updateCustomer(customerId: string, businessId: string, customerData: Partial<Customer>): Observable<Customer> {
-    return this.http.put<Customer>(`/customers/${customerId}`, customerData, {
-      params: { businessId }
+    return this.http.put<Customer>(`/customers/${customerId}`, {
+      ...customerData,
+      businessId
     });
   }
 

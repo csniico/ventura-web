@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { CustomerService } from '../../../../core/services/customer.service';
@@ -194,6 +194,8 @@ export class CustomersComponent implements OnInit, OnDestroy {
   private readonly businessService = inject(BusinessService);
   private readonly destroy$ = new Subject<void>();
 
+  @ViewChild(CustomerModalComponent) private customerModal?: CustomerModalComponent;
+
   // UI State
   protected isModalOpen = signal(false);
   protected selectedCustomer = signal<Customer | null>(null);
@@ -294,6 +296,7 @@ export class CustomersComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError(() => {
           this.showToast('Failed to create customer', 'error');
+          this.customerModal?.resetSubmitting();
           return of(null);
         })
       )
@@ -308,13 +311,17 @@ export class CustomersComponent implements OnInit, OnDestroy {
 
   protected onUpdateCustomer(event: { id: string; data: Partial<Customer> }): void {
     const businessId = this.businessId();
-    if (!businessId) return;
+    if (!businessId) {
+      this.customerModal?.resetSubmitting();
+      return;
+    }
 
     this.customerService.updateCustomer(event.id, businessId, event.data)
       .pipe(
         takeUntil(this.destroy$),
         catchError(() => {
           this.showToast('Failed to update customer', 'error');
+          this.customerModal?.resetSubmitting();
           return of(null);
         })
       )

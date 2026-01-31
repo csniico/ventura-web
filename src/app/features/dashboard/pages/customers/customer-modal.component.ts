@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Customer, CreateCustomerDto } from '../../../../shared/models/customer.model';
@@ -144,7 +144,7 @@ import { Customer, CreateCustomerDto } from '../../../../shared/models/customer.
               </button>
               <button
                 type="submit"
-                [disabled]="customerForm.invalid || isSubmitting()"
+                [disabled]="customerForm.invalid || isSubmitting() || (isEditMode() && !customerForm.dirty)"
                 class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 @if (isSubmitting()) {
@@ -164,7 +164,7 @@ import { Customer, CreateCustomerDto } from '../../../../shared/models/customer.
     }
   `
 })
-export class CustomerModalComponent implements OnInit {
+export class CustomerModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Input() customer: Customer | null = null;
   @Input() businessId = '';
@@ -190,11 +190,17 @@ export class CustomerModalComponent implements OnInit {
     this.setupForm();
   }
 
-  ngOnChanges(): void {
-    this.setupForm();
+  ngOnChanges(changes: SimpleChanges): void {
+    // Only setup form when modal opens or customer changes
+    if (changes['isOpen']?.currentValue === true || changes['customer']) {
+      this.setupForm();
+    }
   }
 
   private setupForm(): void {
+    // Always reset submitting state when modal opens/changes
+    this.isSubmitting.set(false);
+
     if (this.customer) {
       this.isEditMode.set(true);
       this.customerForm.patchValue({
@@ -203,6 +209,8 @@ export class CustomerModalComponent implements OnInit {
         phone: this.customer.phone || '',
         notes: this.customer.notes || ''
       });
+      // Mark form as pristine after patching values
+      this.customerForm.markAsPristine();
     } else {
       this.isEditMode.set(false);
       this.customerForm.reset();

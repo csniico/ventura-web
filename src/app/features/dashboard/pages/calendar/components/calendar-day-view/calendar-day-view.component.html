@@ -52,10 +52,14 @@
                     [ngClass]="getAppointmentColor(appointment)"
                     [ngStyle]="getAppointmentStyle(appointment)"
                     (click)="onAppointmentClick($event, appointment)"
+                    [title]="appointment.title + (appointment.customer?.name ? ' - ' + appointment.customer?.name : '')"
                   >
                     <div class="font-medium text-sm truncate">{{ appointment.title }}</div>
                     <div class="text-xs opacity-75">
                       {{ formatTimeRange(appointment.startTime, appointment.endTime) }}
+                      @if (appointment.customer?.name) {
+                        <span class="text-blue-600 ml-1">· {{ appointment.customer?.name }}</span>
+                      }
                     </div>
                   </div>
                 }
@@ -97,6 +101,11 @@
                     <p class="text-sm text-gray-500">
                       {{ formatTimeRange(appointment.startTime, appointment.endTime) }}
                     </p>
+                    @if (appointment.customer?.name) {
+                      <p class="text-xs text-blue-600 truncate mt-0.5">
+                        {{ appointment.customer?.name }}
+                      </p>
+                    }
                   </div>
                   <span
                     class="w-2 h-2 rounded-full flex-shrink-0 mt-2"

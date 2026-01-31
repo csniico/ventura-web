@@ -26,6 +26,7 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
   protected readonly modalMode = this.calendarState.modalMode;
   protected readonly selectedAppointment = this.calendarState.selectedAppointment;
   protected readonly prefilledDate = this.calendarState.prefilledDate;
+  protected readonly customers = this.calendarState.customers;
 
   protected isLoading = signal(false);
   protected errorMessage = signal('');
@@ -40,6 +41,7 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
   protected readonly appointmentForm: FormGroup = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
     description: ['', [Validators.maxLength(500)]],
+    customerId: [''],
     startDate: ['', [Validators.required]],
     startTime: ['', [Validators.required]],
     endDate: ['', [Validators.required]],
@@ -53,6 +55,7 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
   // Form control getters
   get title() { return this.appointmentForm.get('title'); }
   get description() { return this.appointmentForm.get('description'); }
+  get customerId() { return this.appointmentForm.get('customerId'); }
   get startDate() { return this.appointmentForm.get('startDate'); }
   get startTime() { return this.appointmentForm.get('startTime'); }
   get endDate() { return this.appointmentForm.get('endDate'); }
@@ -102,6 +105,7 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
     this.appointmentForm.patchValue({
       title: appointment.title,
       description: appointment.description || '',
+      customerId: appointment.customerId || '',
       startDate: this.formatDateForInput(startDate),
       startTime: this.formatTimeForInput(startDate),
       endDate: this.formatDateForInput(endDate),
@@ -132,6 +136,7 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
     this.appointmentForm.reset({
       title: '',
       description: '',
+      customerId: '',
       startDate: '',
       startTime: '',
       endDate: '',
@@ -201,8 +206,8 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
       startTime: startDateTime,
       endTime: endDateTime,
       notes: formValue.notes || undefined,
-      userId: user.id,
       businessId: business.id,
+      customerId: formValue.customerId || undefined,
       isRecurring: formValue.isRecurring,
       recurringFrequency: formValue.isRecurring ? formValue.recurringFrequency : undefined,
       recurringUntil: formValue.isRecurring ? formValue.recurringUntil : undefined

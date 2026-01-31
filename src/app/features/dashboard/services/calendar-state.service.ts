@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Appointment } from '../../../shared/models/appointment.model';
+import { Customer } from '../../../shared/models/customer.model';
 
 export interface CalendarDay {
   date: Date;
@@ -21,6 +22,7 @@ export class CalendarStateService {
 
   // Data state
   readonly appointments = signal<Appointment[]>([]);
+  readonly customers = signal<Customer[]>([]);
   readonly isLoading = signal<boolean>(false);
 
   // Modal state
@@ -150,21 +152,53 @@ export class CalendarStateService {
   // Data methods
   setAppointments(appointments: Appointment[]): void {
     this.appointments.set(appointments);
+    this.enrichAllAppointmentsWithCustomers();
+  }
+
+  setCustomers(customers: Customer[]): void {
+    this.customers.set(customers);
+    this.enrichAllAppointmentsWithCustomers();
   }
 
   addAppointment(appointment: Appointment): void {
-    this.appointments.update(current => [...current, appointment]);
+    const enriched = this.enrichAppointmentWithCustomer(appointment);
+    this.appointments.update(current => [...current, enriched]);
   }
 
   updateAppointment(updatedAppointment: Appointment): void {
+    const enriched = this.enrichAppointmentWithCustomer(updatedAppointment);
     this.appointments.update(current =>
-      current.map(apt => apt.id === updatedAppointment.id ? updatedAppointment : apt)
+      current.map(apt => apt.id === enriched.id ? enriched : apt)
     );
   }
 
   removeAppointment(appointmentId: string): void {
     this.appointments.update(current =>
       current.filter(apt => apt.id !== appointmentId)
+    );
+  }
+
+  // Customer enrichment helpers
+  private enrichAppointmentWithCustomer(appointment: Appointment): Appointment {
+    if (appointment.customer?.name || !appointment.customerId) {
+      return appointment;
+    }
+    const customer = this.customers().find(c => c.id === appointment.customerId);
+    return customer ? { ...appointment, customer } : appointment;
+  }
+
+  private enrichAllAppointmentsWithCustomers(): void {
+    const customers = this.customers();
+    if (customers.length === 0) return;
+
+    this.appointments.update(appointments =>
+      appointments.map(apt => {
+        if (apt.customer?.name || !apt.customerId) {
+          return apt;
+        }
+        const customer = customers.find(c => c.id === apt.customerId);
+        return customer ? { ...apt, customer } : apt;
+      })
     );
   }
 

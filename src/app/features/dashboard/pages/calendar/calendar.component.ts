@@ -1,8 +1,9 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { CalendarStateService } from '../../services/calendar-state.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
+import { CustomerService } from '../../../../core/services/customer.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { BusinessService } from '../../../../core/services/business.service';
 import { CalendarHeaderComponent } from './components/calendar-header/calendar-header.component';
@@ -30,6 +31,7 @@ import { Appointment } from '../../../../shared/models/appointment.model';
 export class CalendarComponent implements OnInit, OnDestroy {
   private readonly calendarState = inject(CalendarStateService);
   private readonly appointmentService = inject(AppointmentService);
+  private readonly customerService = inject(CustomerService);
   private readonly authService = inject(AuthService);
   private readonly businessService = inject(BusinessService);
   private readonly destroy$ = new Subject<void>();
@@ -38,7 +40,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   protected readonly isLoading = this.calendarState.isLoading;
 
   ngOnInit(): void {
-    this.loadAppointments();
+    this.loadData();
   }
 
   ngOnDestroy(): void {
@@ -46,7 +48,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadAppointments(): void {
+  private loadData(): void {
     const business = this.businessService.business();
     const businessId = business?.id || this.authService.user()?.businessId;
 
@@ -57,10 +59,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     this.calendarState.isLoading.set(true);
 
-    this.appointmentService.getBusinessAppointments(businessId)
+    forkJoin({
+      appointments: this.appointmentService.getBusinessAppointments(businessId),
+      customers: this.customerService.getCustomers(businessId)
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (appointments) => {
+        next: ({ appointments, customers }) => {
+          this.calendarState.setCustomers(customers);
           this.calendarState.setAppointments(appointments);
           this.calendarState.isLoading.set(false);
         },

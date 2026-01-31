@@ -161,6 +161,25 @@ export class InvoiceStateService {
 
   setCustomers(customers: Customer[]): void {
     this._customers.set(customers);
+    // Re-enrich existing invoices with customer data
+    this.enrichAllInvoicesWithCustomers();
+  }
+
+  private enrichAllInvoicesWithCustomers(): void {
+    const customers = this._customers();
+    if (customers.length === 0) return;
+
+    this._invoices.update(invoices =>
+      invoices.map(invoice => {
+        // Skip if customer data is already present
+        if (invoice.customer?.name) {
+          return invoice;
+        }
+        // Find and attach customer
+        const customer = customers.find(c => c.id === invoice.customerId);
+        return customer ? { ...invoice, customer } : invoice;
+      })
+    );
   }
 
   setCustomersLoading(loading: boolean): void {
@@ -205,13 +224,34 @@ export class InvoiceStateService {
 
   // Invoice actions
   addInvoice(invoice: Invoice): void {
-    this._invoices.update(invoices => [invoice, ...invoices]);
+    // Enrich invoice with customer data if not present
+    const enrichedInvoice = this.enrichInvoiceWithCustomer(invoice);
+    this._invoices.update(invoices => [enrichedInvoice, ...invoices]);
   }
 
   updateInvoice(updatedInvoice: Invoice): void {
+    // Enrich invoice with customer data if not present
+    const enrichedInvoice = this.enrichInvoiceWithCustomer(updatedInvoice);
     this._invoices.update(invoices =>
-      invoices.map(i => i.id === updatedInvoice.id ? updatedInvoice : i)
+      invoices.map(i => i.id === enrichedInvoice.id ? enrichedInvoice : i)
     );
+  }
+
+  private enrichInvoiceWithCustomer(invoice: Invoice): Invoice {
+    // If customer data is already present, return as-is
+    if (invoice.customer?.name) {
+      return invoice;
+    }
+
+    // Try to find customer from loaded customers list
+    const customers = this._customers();
+    const customer = customers.find(c => c.id === invoice.customerId);
+
+    if (customer) {
+      return { ...invoice, customer };
+    }
+
+    return invoice;
   }
 
   updateInvoiceStatus(invoiceId: string, status: InvoiceStatus): void {
