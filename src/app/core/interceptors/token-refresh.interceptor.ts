@@ -64,8 +64,12 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
           catchError((refreshError) => {
             isRefreshing = false;
             refreshTokenSubject.next(false);
-            // Refresh failed - clear auth and redirect to login
-            clearAuthAndRedirect(router);
+            
+            // Only clear auth if refresh fails with 401/403
+            // Don't logout on other errors (network, server errors, etc.)
+            if (refreshError.status === 401 || refreshError.status === 403) {
+              clearAuthAndRedirect(router);
+            }
             return throwError(() => refreshError);
           }),
           finalize(() => {

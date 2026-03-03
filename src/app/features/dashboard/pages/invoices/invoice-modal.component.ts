@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Invoice, CreateInvoiceDto, InvoiceType, InvoiceStatus } from '../../../../core/models/invoice.model';
 import { Customer } from '../../../../core/models/customer.model';
-import { Order } from '../../../../core/models/order.model';
+import { Order, OrderStatus } from '../../../../core/models/order.model';
 
 @Component({
   selector: 'app-invoice-modal',
@@ -35,7 +35,13 @@ export class InvoiceModalComponent implements OnChanges {
   protected customerOrders = computed(() => {
     const customerId = this.selectedCustomerId();
     if (!customerId) return [];
-    return this.availableOrders.filter(o => o.customerId === customerId);
+    
+    // Only show COMPLETED orders that don't already have invoices
+    return this.availableOrders.filter(o => 
+      o.customerId === customerId && 
+      o.status === OrderStatus.COMPLETED && 
+      !o.invoiceId
+    );
   });
 
   protected selectedOrders = computed(() => {
@@ -54,9 +60,17 @@ export class InvoiceModalComponent implements OnChanges {
   protected totalAmount = computed(() => this.subtotal() + this.totalTax());
 
   protected isValid = computed(() => {
-    return this.selectedCustomerId() !== '' &&
-           this.selectedOrderIds().length > 0 &&
-           this.dueDate() !== '';
+    const hasCustomer = this.selectedCustomerId() !== '';
+    const hasCompletedOrders = this.selectedOrderIds().length > 0;
+    const hasDueDate = this.dueDate() !== '';
+    
+    // Additional validation: ensure selected orders are all completed
+    const selectedOrders = this.selectedOrders();
+    const allOrdersCompleted = selectedOrders.every(order => 
+      order.status === OrderStatus.COMPLETED && !order.invoiceId
+    );
+    
+    return hasCustomer && hasCompletedOrders && hasDueDate && allOrdersCompleted;
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -105,6 +119,17 @@ export class InvoiceModalComponent implements OnChanges {
 
   protected onSubmit(): void {
     if (!this.isValid() || this.isSubmitting()) return;
+
+    // Double-check that all selected orders are completed and don't have invoices
+    const selectedOrders = this.selectedOrders();
+    const invalidOrders = selectedOrders.filter(order => 
+      order.status !== OrderStatus.COMPLETED || order.invoiceId
+    );
+    
+    if (invalidOrders.length > 0) {
+      console.error('Cannot create invoice: Some orders are not completed or already have invoices');
+      return;
+    }
 
     this.isSubmitting.set(true);
 
