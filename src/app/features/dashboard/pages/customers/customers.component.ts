@@ -351,18 +351,36 @@ export class CustomersComponent implements OnInit, OnDestroy {
     this.customerService.deleteCustomer(customer.id, businessId)
       .pipe(
         takeUntil(this.destroy$),
-        catchError(() => {
-          this.showToast('Failed to delete customer', 'error');
+        catchError((error) => {
+          // Check if it's a conflict error (customer has invoices/orders)
+          if (error.status === 409 || error.error?.statusCode === 409) {
+            const message = error.error?.message || 'Cannot delete customer with existing invoices or orders';
+            this.showToast(message, 'error');
+          } else {
+            this.showToast('Failed to delete customer', 'error');
+          }
           return of(null);
         })
       )
-      .subscribe((result) => {
-        if (result !== null) {
+      .subscribe({
+        next: () => {
+          // Success - remove customer from UI state
           this.customerState.removeCustomer(customer.id);
           this.showToast(`${customer.name} has been deleted`, 'success');
+          this.customerState.closeDeleteModal();
+          this.customerToDelete.set(null);
+        },
+        error: (error) => {
+          // Error handling
+          if (error.status === 409 || error.error?.statusCode === 409) {
+            const message = error.error?.message || 'Cannot delete customer with existing invoices or orders';
+            this.showToast(message, 'error');
+          } else {
+            this.showToast('Failed to delete customer', 'error');
+          }
+          this.customerState.closeDeleteModal();
+          this.customerToDelete.set(null);
         }
-        this.customerState.closeDeleteModal();
-        this.customerToDelete.set(null);
       });
   }
 

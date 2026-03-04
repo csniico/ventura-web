@@ -6,6 +6,7 @@ import { CalendarStateService } from '../../services/calendar-state.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { BusinessService } from '../../../../core/services/business.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { Appointment, CreateAppointmentDto } from '../../../../shared/models/appointment.model';
 
 @Component({
@@ -20,6 +21,7 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly businessService = inject(BusinessService);
   private readonly appointmentService = inject(AppointmentService);
+  private readonly notificationService = inject(NotificationService);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly isOpen = this.calendarState.isModalOpen;
@@ -231,6 +233,25 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
           this.isLoading.set(false);
           this.calendarState.addAppointment(appointment);
           this.calendarState.closeModal();
+          
+          // Show success notification
+          const customerName = this.customers().find(c => c.id === dto.customerId)?.name;
+          const notificationMessage = customerName 
+            ? `Appointment "${appointment.title}" scheduled for ${customerName}` 
+            : `Appointment "${appointment.title}" scheduled successfully`;
+          
+          this.notificationService.showSuccess(notificationMessage);
+          
+          // Additional notification if customer has email (indicating email was sent)
+          const customer = this.customers().find(c => c.id === dto.customerId);
+          if (customer?.email) {
+            setTimeout(() => {
+              this.notificationService.showInfo(`Confirmation email sent to ${customer.email}`);
+            }, 1000);
+          }
+          
+          // Show success notification for updates
+          this.notificationService.showSuccess(`Appointment "${appointment.title}" updated successfully`);
         },
         error: (error) => {
           this.isLoading.set(false);

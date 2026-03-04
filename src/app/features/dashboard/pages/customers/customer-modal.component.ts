@@ -74,7 +74,7 @@ import { Customer, CreateCustomerDto } from '../../../../shared/models/customer.
               <!-- Email Field -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                  Email Address
+                  Email Address <span class="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

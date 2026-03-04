@@ -244,6 +244,7 @@
 <!-- Delete Confirmation -->
 @if (resourceState.isDeleteModalOpen()) {
   <app-delete-confirmation
+    [isOpen]="true"
     [data]="deleteConfirmationData()"
     (confirm)="onConfirmDelete()"
     (cancel)="resourceState.closeDeleteModal()"

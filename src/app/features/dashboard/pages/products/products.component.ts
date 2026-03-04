@@ -205,35 +205,31 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
     if (item.type === 'product') {
       this.resourceService.deleteProduct(item.item.id, this.businessId())
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError(() => {
-            this.showToast('Failed to delete product', 'error');
-            return of(null);
-          })
-        )
-        .subscribe(result => {
-          if (result !== null) {
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
             this.resourceState.removeProduct(item.item.id);
             this.showToast(`${item.item.name} deleted`, 'success');
+            this.resourceState.closeDeleteModal();
+          },
+          error: () => {
+            this.showToast('Failed to delete product', 'error');
+            this.resourceState.closeDeleteModal();
           }
-          this.resourceState.closeDeleteModal();
         });
     } else {
       this.resourceService.deleteService(item.item.id, this.businessId())
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError(() => {
-            this.showToast('Failed to delete service', 'error');
-            return of(null);
-          })
-        )
-        .subscribe(result => {
-          if (result !== null) {
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
             this.resourceState.removeService(item.item.id);
             this.showToast(`${item.item.name} deleted`, 'success');
+            this.resourceState.closeDeleteModal();
+          },
+          error: () => {
+            this.showToast('Failed to delete service', 'error');
+            this.resourceState.closeDeleteModal();
           }
-          this.resourceState.closeDeleteModal();
         });
     }
   }

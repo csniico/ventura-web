@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Invoice, InvoiceStatus } from '../../../core/models/invoice.model';
 import { Customer } from '../../../core/models/customer.model';
-import { Order } from '../../../core/models/order.model';
+import { Order, OrderStatus } from '../../../core/models/order.model';
 
 export type InvoiceTab = 'all' | 'draft' | 'sent' | 'paid' | 'overdue';
 
@@ -187,7 +187,11 @@ export class InvoiceStateService {
   }
 
   setAvailableOrders(orders: Order[]): void {
-    this._availableOrders.set(orders);
+    // Ensure only completed orders without existing invoices are available for invoice creation
+    const validOrders = orders.filter(order => 
+      order.status === OrderStatus.COMPLETED && !order.invoiceId
+    );
+    this._availableOrders.set(validOrders);
   }
 
   setOrdersLoading(loading: boolean): void {
