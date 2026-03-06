@@ -16,6 +16,7 @@ export class ProductListComponent {
   @Input() currentPage = 1;
   @Input() pageSize = 12;
 
+  @Output() productView = new EventEmitter<Product>();
   @Output() productEdit = new EventEmitter<Product>();
   @Output() productDelete = new EventEmitter<Product>();
   @Output() pageChange = new EventEmitter<number>();

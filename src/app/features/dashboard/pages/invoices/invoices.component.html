@@ -131,6 +131,7 @@
         [currentPage]="invoiceState.currentPage()"
         [pageSize]="invoiceState.pageSize()"
         (invoiceView)="onViewInvoice($event)"
+        (invoicePrint)="onPrintInvoice($event)"
         (invoicePayment)="onRecordPayment($event)"
         (invoiceStatusChange)="onUpdateStatus($event)"
         (pageChange)="onPageChange($event)"

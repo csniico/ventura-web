@@ -18,6 +18,7 @@ export class InvoiceListComponent {
   @Output() invoiceView = new EventEmitter<Invoice>();
   @Output() invoicePayment = new EventEmitter<Invoice>();
   @Output() invoiceStatusChange = new EventEmitter<Invoice>();
+  @Output() invoicePrint = new EventEmitter<Invoice>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() createInvoice = new EventEmitter<void>();
 

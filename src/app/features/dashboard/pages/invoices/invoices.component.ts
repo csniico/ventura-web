@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { InvoiceService } from '../../../../core/services/invoice.service';
 import { InvoiceStateService, InvoiceTab } from '../../services/invoice-state.service';
@@ -8,6 +9,7 @@ import { OrderService } from '../../../../core/services/order.service';
 import { BusinessService } from '../../../../core/services/business.service';
 import { Invoice, CreateInvoiceDto, InvoiceStatus, UpdateInvoicePaymentDto, PaymentMethod } from '../../../../core/models/invoice.model';
 import { OrderStatus } from '../../../../core/models/order.model';
+import { InvoicePdfService } from '../../../../core/services/invoice-pdf.service';
 import { SearchInputComponent } from '../../../../shared/components/search-input.component';
 import { InvoiceListComponent } from './invoice-list.component';
 import { InvoiceModalComponent } from './invoice-modal.component';
@@ -33,6 +35,8 @@ export class InvoicesComponent implements OnInit, OnDestroy {
   private readonly customerService = inject(CustomerService);
   private readonly orderService = inject(OrderService);
   private readonly businessService = inject(BusinessService);
+  private readonly invoicePdfService = inject(InvoicePdfService);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly businessId = signal('');
@@ -124,7 +128,7 @@ export class InvoicesComponent implements OnInit, OnDestroy {
   }
 
   protected onViewInvoice(invoice: Invoice): void {
-    this.invoiceState.openViewModal(invoice);
+    this.router.navigate(['/dashboard/invoices', invoice.id]);
   }
 
   protected onRecordPayment(invoice: Invoice): void {
@@ -133,6 +137,15 @@ export class InvoicesComponent implements OnInit, OnDestroy {
 
   protected onUpdateStatus(invoice: Invoice): void {
     this.invoiceState.openStatusModal(invoice);
+  }
+
+  protected onPrintInvoice(invoice: Invoice): void {
+    const business = this.businessService.getCurrentBusiness() || this.businessService.business();
+    if (business) {
+      this.invoicePdfService.generatePdf(invoice, business);
+    } else {
+      this.showToast('Business details not available for PDF generation', 'error');
+    }
   }
 
   protected onSaveInvoice(dto: CreateInvoiceDto): void {

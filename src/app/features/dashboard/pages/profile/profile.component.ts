@@ -721,13 +721,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.isSaving.set(true);
 
-    // Note: This endpoint may need to be implemented on backend
-    // For now, we'll show a placeholder message
-    setTimeout(() => {
-      this.showToast('Password change feature coming soon', 'success');
-      this.closePasswordModal();
-      this.isSaving.set(false);
-    }, 1000);
+    this.userService.changePassword(userId, {
+      oldPassword: this.passwordForm.value.currentPassword,
+      newPassword: this.passwordForm.value.newPassword,
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          const message = error?.error?.message || 'Failed to change password';
+          this.showToast(message, 'error');
+          this.isSaving.set(false);
+          return of(null);
+        })
+      )
+      .subscribe(result => {
+        if (result !== null) {
+          this.showToast('Password changed successfully', 'success');
+          this.closePasswordModal();
+        }
+        this.isSaving.set(false);
+      });
   }
 
   protected openBusinessEditModal(): void {

@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { CustomerService } from '../../../../core/services/customer.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
@@ -10,6 +11,7 @@ import { SearchInputComponent } from '../../../../shared/components/search-input
 import { CustomerListComponent } from './customer-list.component';
 import { DeleteConfirmationComponent, DeleteConfirmationData } from '../../../../shared/components/delete-confirmation.component';
 import { CustomerModalComponent } from './customer-modal.component';
+import { CustomerImportModalComponent } from '../../components/customer-import-modal/customer-import-modal.component';
 
 @Component({
   selector: 'app-customers',
@@ -19,7 +21,8 @@ import { CustomerModalComponent } from './customer-modal.component';
     SearchInputComponent,
     CustomerListComponent,
     CustomerModalComponent,
-    DeleteConfirmationComponent
+    DeleteConfirmationComponent,
+    CustomerImportModalComponent
   ],
   template: `
     <div class="space-y-6">
@@ -29,15 +32,26 @@ import { CustomerModalComponent } from './customer-modal.component';
           <h1 class="text-2xl font-semibold text-gray-900">Customers</h1>
           <p class="text-sm text-gray-600 mt-1">Manage your customer database</p>
         </div>
-        <button
-          (click)="openCreateModal()"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-sm"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          Add Customer
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            (click)="isImportModalOpen.set(true)"
+            class="inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-sm"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            Import CSV
+          </button>
+          <button
+            (click)="openCreateModal()"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-sm"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add Customer
+          </button>
+        </div>
       </div>
 
       <!-- Stats Summary -->
@@ -185,6 +199,14 @@ import { CustomerModalComponent } from './customer-modal.component';
       (confirm)="onConfirmDelete()"
       (cancel)="customerState.closeDeleteModal()"
     />
+
+    <!-- Import CSV Modal -->
+    <app-customer-import-modal
+      [isOpen]="isImportModalOpen()"
+      [businessId]="businessId()"
+      (closed)="isImportModalOpen.set(false)"
+      (imported)="onImportComplete($event)"
+    />
   `
 })
 export class CustomersComponent implements OnInit, OnDestroy {
@@ -192,12 +214,14 @@ export class CustomersComponent implements OnInit, OnDestroy {
   protected readonly customerState = inject(CustomerStateService);
   private readonly authService = inject(AuthService);
   private readonly businessService = inject(BusinessService);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   @ViewChild(CustomerModalComponent) private customerModal?: CustomerModalComponent;
 
   // UI State
   protected isModalOpen = signal(false);
+  protected isImportModalOpen = signal(false);
   protected selectedCustomer = signal<Customer | null>(null);
   protected businessId = signal('');
   protected customerToDelete = signal<Customer | null>(null);
@@ -272,7 +296,7 @@ export class CustomersComponent implements OnInit, OnDestroy {
   }
 
   protected onCustomerSelected(customer: Customer): void {
-    this.customerState.setSelectedCustomer(customer);
+    this.router.navigate(['/dashboard/customers', customer.id]);
   }
 
   protected openCreateModal(): void {
@@ -382,6 +406,12 @@ export class CustomersComponent implements OnInit, OnDestroy {
           this.customerToDelete.set(null);
         }
       });
+  }
+
+  protected onImportComplete(count: number): void {
+    this.isImportModalOpen.set(false);
+    this.showToast(`Successfully imported ${count} customers`, 'success');
+    this.loadCustomers();
   }
 
   // Stats helper methods

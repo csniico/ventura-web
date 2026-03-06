@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { OrderService } from '../../../../core/services/order.service';
 import { OrderStateService, OrderTab } from '../../services/order-state.service';
@@ -28,11 +29,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
   private readonly orderService = inject(OrderService);
   private readonly customerService = inject(CustomerService);
   private readonly businessService = inject(BusinessService);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly businessId = signal('');
   protected readonly toastMessage = signal('');
   protected readonly toastType = signal<'success' | 'error'>('success');
+  protected readonly showFilters = signal(false);
 
   protected readonly tabs: { key: OrderTab; label: string }[] = [
     { key: 'all', label: 'All Orders' },
@@ -109,12 +112,41 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderState.setCurrentPage(page);
   }
 
+  protected toggleFilters(): void {
+    this.showFilters.update(v => !v);
+  }
+
+  protected onDateRangeChange(type: 'start' | 'end', event: Event): void {
+    const value = (event.target as HTMLInputElement).value || null;
+    const filters = this.orderState.filters();
+    if (type === 'start') {
+      this.orderState.setDateRange(value, filters.endDate);
+    } else {
+      this.orderState.setDateRange(filters.startDate, value);
+    }
+  }
+
+  protected onAmountChange(type: 'min' | 'max', event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    const value = raw ? parseFloat(raw) : null;
+    const filters = this.orderState.filters();
+    if (type === 'min') {
+      this.orderState.setAmountRange(value, filters.maxAmount);
+    } else {
+      this.orderState.setAmountRange(filters.minAmount, value);
+    }
+  }
+
+  protected clearFilters(): void {
+    this.orderState.clearAdvancedFilters();
+  }
+
   protected openCreateModal(): void {
     this.orderState.openCreateModal();
   }
 
   protected onViewOrder(order: Order): void {
-    this.orderState.openViewModal(order);
+    this.router.navigate(['/dashboard/orders', order.id]);
   }
 
   protected onStatusChange(order: Order): void {

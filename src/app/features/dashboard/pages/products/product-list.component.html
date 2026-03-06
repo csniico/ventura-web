@@ -42,7 +42,7 @@
     @for (product of products; track product.id) {
       <div
         class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
-        (click)="productEdit.emit(product)"
+        (click)="productView.emit(product)"
       >
         <!-- Product Image -->
         <div class="aspect-square bg-gray-100 relative overflow-hidden">

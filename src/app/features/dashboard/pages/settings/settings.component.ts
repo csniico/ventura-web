@@ -1,9 +1,10 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { BusinessService } from '../../../../core/services/business.service';
+import { UserService } from '../../../../core/services/user.service';
 
 type SettingsTab = 'profile' | 'business' | 'notifications' | 'security' | 'appearance';
 
@@ -23,6 +24,7 @@ interface NotificationSettings {
 export class SettingsComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly businessService = inject(BusinessService);
+  private readonly userService = inject(UserService);
   private readonly destroy$ = new Subject<void>();
 
   // Tab state
@@ -131,23 +133,60 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   protected onSaveProfile(): void {
+    const userId = this.user()?.id;
+    if (!userId) return;
+
     this.isProfileSaving.set(true);
 
-    // Simulate save - in real app, call user service
-    setTimeout(() => {
-      this.isProfileSaving.set(false);
-      this.showToast('Profile updated successfully', 'success');
-    }, 1000);
+    this.userService.updateUserProfile(userId, {
+      firstName: this.firstName(),
+      lastName: this.lastName(),
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => {
+          this.isProfileSaving.set(false);
+          this.showToast('Failed to update profile', 'error');
+          return of(null);
+        })
+      )
+      .subscribe(updatedUser => {
+        this.isProfileSaving.set(false);
+        if (updatedUser) {
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          this.authService['user'].set(updatedUser);
+          this.showToast('Profile updated successfully', 'success');
+        }
+      });
   }
 
   protected onSaveBusiness(): void {
+    const businessId = this.business()?.id;
+    if (!businessId) return;
+
     this.isBusinessSaving.set(true);
 
-    // Simulate save - in real app, call business service
-    setTimeout(() => {
-      this.isBusinessSaving.set(false);
-      this.showToast('Business settings updated successfully', 'success');
-    }, 1000);
+    this.businessService.updateBusiness(businessId, {
+      name: this.businessName(),
+      description: this.businessDescription(),
+      phone: this.businessPhone(),
+      email: this.businessEmail(),
+      address: this.businessAddress(),
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => {
+          this.isBusinessSaving.set(false);
+          this.showToast('Failed to update business settings', 'error');
+          return of(null);
+        })
+      )
+      .subscribe(updatedBusiness => {
+        this.isBusinessSaving.set(false);
+        if (updatedBusiness) {
+          this.showToast('Business settings updated successfully', 'success');
+        }
+      });
   }
 
   protected onChangePassword(): void {
@@ -163,16 +202,33 @@ export class SettingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const userId = this.user()?.id;
+    if (!userId) return;
+
     this.isPasswordSaving.set(true);
 
-    // Simulate save - in real app, call auth service
-    setTimeout(() => {
-      this.isPasswordSaving.set(false);
-      this.currentPassword.set('');
-      this.newPassword.set('');
-      this.confirmPassword.set('');
-      this.showToast('Password changed successfully', 'success');
-    }, 1000);
+    this.userService.changePassword(userId, {
+      oldPassword: this.currentPassword(),
+      newPassword: this.newPassword(),
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.isPasswordSaving.set(false);
+          const message = error?.error?.message || 'Failed to change password';
+          this.passwordError.set(message);
+          return of(null);
+        })
+      )
+      .subscribe(result => {
+        this.isPasswordSaving.set(false);
+        if (result !== null) {
+          this.currentPassword.set('');
+          this.newPassword.set('');
+          this.confirmPassword.set('');
+          this.showToast('Password changed successfully', 'success');
+        }
+      });
   }
 
   protected toggleNotification(key: keyof NotificationSettings): void {
@@ -188,7 +244,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const theme = this.isDarkMode() ? 'dark' : 'light';
     localStorage.setItem('theme', theme);
 
-    // Apply theme to document
     if (this.isDarkMode()) {
       document.documentElement.classList.add('dark');
     } else {

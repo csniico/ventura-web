@@ -9,12 +9,11 @@
 <!-- Loading State -->
 @if (isLoading()) {
   <div class="animate-pulse space-y-6">
-    <!-- Stats skeleton -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
       @for (i of [1, 2, 3, 4]; track i) {
         <div class="bg-white rounded-lg border border-gray-200 p-5">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
             <div class="flex-1">
               <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
               <div class="h-6 bg-gray-200 rounded w-16"></div>
@@ -23,83 +22,125 @@
         </div>
       }
     </div>
-
-    <!-- Content skeleton -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-      <div class="bg-white rounded-lg border border-gray-200 p-5 h-80">
-        <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
-        <div class="space-y-3">
-          @for (i of [1, 2, 3]; track i) {
-            <div class="h-16 bg-gray-200 rounded"></div>
-          }
+      @for (i of [1, 2]; track i) {
+        <div class="bg-white rounded-lg border border-gray-200 p-5 h-80">
+          <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+          <div class="space-y-3">
+            @for (j of [1, 2, 3]; track j) {
+              <div class="h-16 bg-gray-200 rounded"></div>
+            }
+          </div>
         </div>
-      </div>
-      <div class="bg-white rounded-lg border border-gray-200 p-5 h-80">
-        <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
-        <div class="space-y-3">
-          @for (i of [1, 2, 3]; track i) {
-            <div class="h-16 bg-gray-200 rounded"></div>
-          }
-        </div>
-      </div>
+      }
     </div>
   </div>
-} @else {
-  <!-- Stats Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-    <app-stat-card
-      title="Today's Appointments"
-      [value]="stats().todayAppointments"
-      subtitle="scheduled today"
-      iconType="calendar"
-      iconColorClass="text-blue-600"
-      iconBgClass="bg-blue-50"
-    />
+} @else if (summary()) {
+  <!-- Financial Overview Cards -->
+  <div class="mb-6 lg:mb-8">
+    <app-financial-cards [financial]="summary()!.financial" />
+  </div>
 
+  <!-- Quick Stats -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
     <app-stat-card
-      title="Total Customers"
-      [value]="stats().totalCustomers"
+      title="Total Orders"
+      [value]="summary()!.stats.totalOrders"
+      subtitle="all time"
+      iconType="clock"
+      iconColorClass="text-violet-600"
+      iconBgClass="bg-violet-50"
+    />
+    <app-stat-card
+      title="Customers"
+      [value]="summary()!.stats.totalCustomers"
       subtitle="registered"
       iconType="users"
       iconColorClass="text-emerald-600"
       iconBgClass="bg-emerald-50"
     />
-
     <app-stat-card
-      title="This Week"
-      [value]="stats().upcomingAppointments"
-      subtitle="appointments"
-      iconType="clock"
-      iconColorClass="text-violet-600"
-      iconBgClass="bg-violet-50"
-    />
-
-    <app-stat-card
-      title="Products & Services"
-      [value]="stats().totalResources"
+      title="Products"
+      [value]="summary()!.stats.totalProducts"
       subtitle="listed"
       iconType="package"
       iconColorClass="text-amber-600"
       iconBgClass="bg-amber-50"
     />
+    <app-stat-card
+      title="Invoices"
+      [value]="summary()!.stats.totalInvoices"
+      subtitle="created"
+      iconType="chart"
+      iconColorClass="text-blue-600"
+      iconBgClass="bg-blue-50"
+    />
   </div>
 
-  <!-- Main Content Grid -->
+  <!-- Alerts Section -->
+  <div class="mb-6 lg:mb-8">
+    <app-alerts-section [alerts]="summary()!.alerts" />
+  </div>
+
+  <!-- Main Content: Top Performers + Activity Feed -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+    <app-top-performers [performers]="summary()!.topPerformers" />
+    <app-activity-feed [activities]="summary()!.recentActivity" />
+  </div>
+
+  <!-- Today's Schedule + Quick Actions -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
     <app-today-schedule
       [appointments]="todayAppointments()"
-      [isLoading]="appointmentsLoading()"
+      [isLoading]="false"
       (appointmentClick)="onAppointmentClick($event)"
     />
-
-    <app-recent-customers
-      [customers]="recentCustomers()"
-      [isLoading]="customersLoading()"
-    />
+    <app-quick-actions (actionClicked)="onQuickAction($event)" />
   </div>
 
-  <!-- Quick Actions -->
-  <app-quick-actions (actionClicked)="onQuickAction($event)" />
+  <!-- Cancellations Summary -->
+  @if (summary()!.cancellations.cancelledOrders.total > 0 || summary()!.cancellations.cancelledInvoices.total > 0) {
+    <div class="bg-white rounded-lg border border-gray-200 mb-6 lg:mb-8">
+      <div class="px-5 py-4 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-900">Cancellations Overview</h3>
+      </div>
+      <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        @if (summary()!.cancellations.cancelledOrders.total > 0) {
+          <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">Cancelled Orders</p>
+            <p class="text-xl font-bold text-gray-900">{{ summary()!.cancellations.cancelledOrders.total }}</p>
+            <p class="text-xs text-red-500 mt-1">
+              Revenue lost: {{ summary()!.cancellations.cancelledOrders.totalRevenueLost | currency:'GHS ':'symbol':'1.2-2' }}
+            </p>
+          </div>
+        }
+        @if (summary()!.cancellations.cancelledInvoices.total > 0) {
+          <div>
+            <p class="text-sm font-medium text-gray-500 mb-1">Cancelled Invoices</p>
+            <p class="text-xl font-bold text-gray-900">{{ summary()!.cancellations.cancelledInvoices.total }}</p>
+            <p class="text-xs text-red-500 mt-1">
+              Revenue lost: {{ summary()!.cancellations.cancelledInvoices.totalRevenueLost | currency:'GHS ':'symbol':'1.2-2' }}
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+} @else {
+  <!-- Empty State (no summary data) -->
+  <div class="text-center py-16">
+    <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Welcome to your dashboard</h3>
+    <p class="text-sm text-gray-500 mb-6">Start by creating orders and invoices to see your analytics here.</p>
+    <div class="flex justify-center gap-3">
+      <a routerLink="/dashboard/orders" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">Create Order</a>
+      <a routerLink="/dashboard/customers" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">Add Customer</a>
+    </div>
+  </div>
 }
 
 <!-- Appointment Modal -->

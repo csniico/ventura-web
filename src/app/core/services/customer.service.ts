@@ -79,4 +79,11 @@ export class CustomerService {
   deleteCustomer(customerId: string, businessId: string): Observable<void> {
     return this.http.delete<void>(`/customers/${customerId}?businessId=${businessId}`);
   }
+
+  /**
+   * Bulk import customers
+   */
+  importCustomers(customers: CreateCustomerDto[]): Observable<{ imported: number; failed: number }> {
+    return this.http.post<{ imported: number; failed: number }>('/customers/import', { customers });
+  }
 }

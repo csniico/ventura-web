@@ -1,0 +1,104 @@
+@if (isOpen) {
+  <div class="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+        <h3 class="text-lg font-semibold text-gray-900">Import Customers</h3>
+        <button (click)="close()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto p-6">
+        @if (parsedCustomers().length === 0) {
+          <!-- Upload Area -->
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p class="text-sm font-medium text-gray-700 mb-2">Upload a CSV file</p>
+            <p class="text-xs text-gray-500 mb-4">Required columns: name. Optional: email, phone, notes</p>
+            <label class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Choose File
+              <input type="file" accept=".csv" class="hidden" (change)="onFileSelected($event)"/>
+            </label>
+            @if (fileName()) {
+              <p class="text-sm text-gray-600 mt-3">{{ fileName() }}</p>
+            }
+          </div>
+
+          <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p class="text-xs font-medium text-gray-700 mb-2">CSV Format Example:</p>
+            <code class="text-xs text-gray-500 block">name,email,phone,notes<br>John Doe,john&#64;example.com,0201234567,VIP customer<br>Jane Smith,jane&#64;example.com,,Regular</code>
+          </div>
+        } @else {
+          <!-- Preview -->
+          <div class="mb-4 flex items-center justify-between">
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">{{ parsedCustomers().length }}</span> customers found
+              <!-- invalid entries highlighted in red -->
+            </p>
+            <button (click)="parsedCustomers.set([]); fileName.set('')" class="text-sm text-blue-600 hover:text-blue-700">Choose different file</button>
+          </div>
+
+          <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="text-left py-2.5 px-3 text-xs font-medium text-gray-500">Name</th>
+                  <th class="text-left py-2.5 px-3 text-xs font-medium text-gray-500">Email</th>
+                  <th class="text-left py-2.5 px-3 text-xs font-medium text-gray-500">Phone</th>
+                  <th class="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (customer of parsedCustomers(); track $index; let i = $index) {
+                  <tr class="border-t border-gray-100" [class.bg-red-50]="!customer.valid">
+                    <td class="py-2 px-3 text-sm text-gray-900">{{ customer.name || '(empty)' }}</td>
+                    <td class="py-2 px-3 text-sm text-gray-500">{{ customer.email || '-' }}</td>
+                    <td class="py-2 px-3 text-sm text-gray-500">{{ customer.phone || '-' }}</td>
+                    <td class="py-2 px-3">
+                      <button (click)="removeCustomer(i)" class="text-gray-400 hover:text-red-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (error()) {
+          <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-sm text-red-700">{{ error() }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      @if (parsedCustomers().length > 0) {
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0">
+          <button (click)="close()" class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+            Cancel
+          </button>
+          <button
+            (click)="onImport()"
+            [disabled]="isImporting()"
+            class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {{ isImporting() ? 'Importing...' : 'Import ' + parsedCustomers().length + ' Customers' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
