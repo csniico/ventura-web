@@ -9,6 +9,10 @@ interface OrderFilters {
   status: OrderStatus | null;
   sortBy: 'createdAt' | 'totalAmount' | 'orderNumber';
   sortOrder: 'asc' | 'desc';
+  startDate: string | null;
+  endDate: string | null;
+  minAmount: number | null;
+  maxAmount: number | null;
 }
 
 @Injectable({
@@ -31,7 +35,11 @@ export class OrderStateService {
     searchQuery: '',
     status: null,
     sortBy: 'createdAt',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
+    startDate: null,
+    endDate: null,
+    minAmount: null,
+    maxAmount: null
   });
 
   // Modal state
@@ -71,7 +79,7 @@ export class OrderStateService {
   // Computed values
   readonly filteredOrders = computed(() => {
     const orders = this._orders();
-    const { searchQuery, sortBy, sortOrder } = this._filters();
+    const { searchQuery, sortBy, sortOrder, startDate, endDate, minAmount, maxAmount } = this._filters();
     const activeTab = this._activeTab();
 
     let filtered = orders;
@@ -89,6 +97,24 @@ export class OrderStateService {
         o.customer?.name?.toLowerCase().includes(query) ||
         o.customer?.email?.toLowerCase().includes(query)
       );
+    }
+
+    // Filter by date range
+    if (startDate) {
+      const start = new Date(startDate).getTime();
+      filtered = filtered.filter(o => new Date(o.createdAt).getTime() >= start);
+    }
+    if (endDate) {
+      const end = new Date(endDate).getTime() + 86400000; // include end date
+      filtered = filtered.filter(o => new Date(o.createdAt).getTime() < end);
+    }
+
+    // Filter by amount range
+    if (minAmount !== null) {
+      filtered = filtered.filter(o => o.totalAmount >= minAmount);
+    }
+    if (maxAmount !== null) {
+      filtered = filtered.filter(o => o.totalAmount <= maxAmount);
     }
 
     return this.sortOrders(filtered, sortBy, sortOrder);
@@ -158,6 +184,32 @@ export class OrderStateService {
     this._filters.update(f => ({ ...f, sortBy, sortOrder }));
   }
 
+  setDateRange(startDate: string | null, endDate: string | null): void {
+    this._filters.update(f => ({ ...f, startDate, endDate }));
+    this._currentPage.set(1);
+  }
+
+  setAmountRange(minAmount: number | null, maxAmount: number | null): void {
+    this._filters.update(f => ({ ...f, minAmount, maxAmount }));
+    this._currentPage.set(1);
+  }
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this._filters();
+    return !!(f.startDate || f.endDate || f.minAmount !== null || f.maxAmount !== null);
+  });
+
+  clearAdvancedFilters(): void {
+    this._filters.update(f => ({
+      ...f,
+      startDate: null,
+      endDate: null,
+      minAmount: null,
+      maxAmount: null
+    }));
+    this._currentPage.set(1);
+  }
+
   setCurrentPage(page: number): void {
     this._currentPage.set(page);
   }
@@ -222,7 +274,11 @@ export class OrderStateService {
       searchQuery: '',
       status: null,
       sortBy: 'createdAt',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
+      startDate: null,
+      endDate: null,
+      minAmount: null,
+      maxAmount: null
     });
     this._currentPage.set(1);
     this._isModalOpen.set(false);

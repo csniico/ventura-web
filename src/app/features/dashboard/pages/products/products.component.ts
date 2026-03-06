@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { ResourceService } from '../../../../core/services/resource.service';
 import { ResourceStateService } from '../../services/resource-state.service';
@@ -32,6 +33,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private readonly resourceService = inject(ResourceService);
   private readonly authService = inject(AuthService);
   private readonly businessService = inject(BusinessService);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly businessId = signal('');
@@ -99,6 +101,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   protected openCreateModal(): void {
     this.resourceState.openCreateModal(this.resourceState.activeTab() === 'products' ? 'product' : 'service');
+  }
+
+  protected onViewProduct(product: Product): void {
+    this.router.navigate(['/dashboard/products', product.id]);
   }
 
   protected openEditProductModal(product: Product): void {

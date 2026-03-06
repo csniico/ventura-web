@@ -6,11 +6,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { BusinessService } from '../../../core/services/business.service';
 import { Business } from '../../../shared/models/business.model';
 import { User } from '../../../shared/models/user.model';
+import { ToastComponent } from '../../../shared/components/toast.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
   templateUrl: './dashboard-layout.component.html'
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {

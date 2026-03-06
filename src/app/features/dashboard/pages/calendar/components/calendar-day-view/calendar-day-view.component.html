@@ -54,7 +54,12 @@
                     (click)="onAppointmentClick($event, appointment)"
                     [title]="appointment.title + (appointment.customer?.name ? ' - ' + appointment.customer?.name : '')"
                   >
-                    <div class="font-medium text-sm truncate">{{ appointment.title }}</div>
+                    <div class="font-medium text-sm truncate">
+                      @if (appointment.isRecurring) {
+                        <span title="Recurring">&#x21BB;</span>
+                      }
+                      {{ appointment.title }}
+                    </div>
                     <div class="text-xs opacity-75">
                       {{ formatTimeRange(appointment.startTime, appointment.endTime) }}
                       @if (appointment.customer?.name) {
@@ -97,7 +102,12 @@
               >
                 <div class="flex items-start justify-between">
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-medium text-gray-900 truncate">{{ appointment.title }}</h4>
+                    <h4 class="font-medium text-gray-900 truncate">
+                      @if (appointment.isRecurring) {
+                        <span class="text-blue-500" title="Recurring ({{ appointment.recurringFrequency }})">&#x21BB;</span>
+                      }
+                      {{ appointment.title }}
+                    </h4>
                     <p class="text-sm text-gray-500">
                       {{ formatTimeRange(appointment.startTime, appointment.endTime) }}
                     </p>

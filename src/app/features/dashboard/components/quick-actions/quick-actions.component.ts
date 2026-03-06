@@ -1,8 +1,8 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
-export type QuickActionType = 'appointment' | 'customer' | 'product' | 'service';
+export type QuickActionType = 'appointment' | 'customer' | 'product' | 'order' | 'invoice';
 
 @Component({
   selector: 'app-quick-actions',
@@ -11,11 +11,26 @@ export type QuickActionType = 'appointment' | 'customer' | 'product' | 'service'
   templateUrl: './quick-actions.component.html'
 })
 export class QuickActionsComponent {
+  private readonly router = inject(Router);
+
   @Output() actionClicked = new EventEmitter<QuickActionType>();
 
   protected onAction(action: QuickActionType): void {
     this.actionClicked.emit(action);
-    // TODO: Open modal or navigate to create page
-    console.log('Quick action clicked:', action);
+
+    switch (action) {
+      case 'customer':
+        this.router.navigate(['/dashboard/customers'], { queryParams: { action: 'create' } });
+        break;
+      case 'order':
+        this.router.navigate(['/dashboard/orders'], { queryParams: { action: 'create' } });
+        break;
+      case 'invoice':
+        this.router.navigate(['/dashboard/invoices'], { queryParams: { action: 'create' } });
+        break;
+      case 'product':
+        this.router.navigate(['/dashboard/products'], { queryParams: { action: 'create' } });
+        break;
+    }
   }
 }

@@ -17,4 +17,8 @@ export class UserService {
   updateUserProfile(userId: string, profileData: Partial<User>): Observable<User> {
     return this.http.patch<User>(API_ENDPOINTS.USERS.PROFILE(userId), profileData);
   }
+
+  changePassword(userId: string, data: { oldPassword: string; newPassword: string }): Observable<void> {
+    return this.http.post<void>(API_ENDPOINTS.USERS.CHANGE_PASSWORD(userId), data);
+  }
 }

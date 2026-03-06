@@ -180,6 +180,7 @@
           [totalProducts]="resourceState.totalProducts()"
           [currentPage]="resourceState.currentPage()"
           [pageSize]="resourceState.pageSize()"
+          (productView)="onViewProduct($event)"
           (productEdit)="openEditProductModal($event)"
           (productDelete)="onDeleteProduct($event)"
           (pageChange)="onPageChange($event)"

@@ -140,6 +140,13 @@ export const API_ENDPOINTS = {
       return url;
     },
   },
+  // Dashboard endpoints
+  DASHBOARD: {
+    SUMMARY: (businessId: string) => `/dashboard/summary?businessId=${businessId}`,
+  },
+
+  // Customer import
+  CUSTOMERS_IMPORT: '/customers/import',
 } as const;
 
 export const HTTP_STATUS = {

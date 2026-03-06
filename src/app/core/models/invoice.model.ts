@@ -21,7 +21,7 @@ export enum PaymentMethod {
 export enum InvoiceType {
   STANDARD = 'STANDARD',
   PROFORMA = 'PROFORMA',
-  RECEIPT = 'RECEIPT'
+  RECEIPT = 'RECIEPT'
 }
 
 export interface Invoice {
