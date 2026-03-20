@@ -21,7 +21,7 @@ export enum PaymentMethod {
 export enum InvoiceType {
   STANDARD = 'STANDARD',
   PROFORMA = 'PROFORMA',
-  RECEIPT = 'RECIEPT'
+  RECEIPT = 'RECEIPT'
 }
 
 export interface Invoice {
@@ -34,6 +34,11 @@ export interface Invoice {
   // Relationships
   customer?: Customer;
   orders?: Order[];
+
+  // Customer snapshot at time of invoice creation
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
 
   // Financial Details - Ghana VAT Structure
   subtotal: number;

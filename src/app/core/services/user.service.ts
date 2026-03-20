@@ -21,4 +21,12 @@ export class UserService {
   changePassword(userId: string, data: { oldPassword: string; newPassword: string }): Observable<void> {
     return this.http.post<void>(API_ENDPOINTS.USERS.CHANGE_PASSWORD(userId), data);
   }
+
+  deleteUser(userId: string): Observable<void> {
+    return this.http.delete<void>(API_ENDPOINTS.USERS.BY_ID(userId));
+  }
+
+  resetPassword(userId: string, data: { newPassword: string }): Observable<void> {
+    return this.http.post<void>(API_ENDPOINTS.USERS.RESET_PASSWORD(userId), data);
+  }
 }
