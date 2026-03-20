@@ -34,6 +34,12 @@ export interface Order {
   totalAmount: number;
   items: OrderItem[];
   customer?: Customer;
+
+  // Customer snapshot at time of order creation
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+
   createdAt: string;
   updatedAt: string;
 }

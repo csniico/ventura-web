@@ -1,0 +1,106 @@
+@if (isLoading) {
+  <!-- Loading Skeleton -->
+  <div class="space-y-3">
+    @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+      <div class="animate-pulse">
+        <div class="h-14 bg-gray-100 rounded-lg"></div>
+      </div>
+    }
+  </div>
+} @else if (logs.length === 0) {
+  <!-- Empty State -->
+  <div class="text-center py-12">
+    <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 mb-1">No audit logs found</h3>
+    <p class="text-sm text-gray-500">Activity logs will appear here as actions are performed</p>
+  </div>
+} @else {
+  <!-- Audit Logs Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-100">
+          <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+          <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
+          <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Entity ID</th>
+          <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+          <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        @for (log of logs; track log.id) {
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4">
+              <span
+                class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+                [ngClass]="getActionClasses(log.action)"
+              >
+                {{ log.action }}
+              </span>
+            </td>
+            <td class="py-4 px-4">
+              <span
+                class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+                [ngClass]="getEntityClasses(log.entity)"
+              >
+                {{ formatEntity(log.entity) }}
+              </span>
+            </td>
+            <td class="py-4 px-4 hidden md:table-cell">
+              <span class="text-sm text-gray-500 font-mono">
+                {{ log.entityId ? (log.entityId | slice:0:8) + '...' : '-' }}
+              </span>
+            </td>
+            <td class="py-4 px-4 text-right">
+              <div>
+                <p class="text-sm text-gray-900">{{ log.createdAt | date:'MMM d, y' }}</p>
+                <p class="text-xs text-gray-500">{{ log.createdAt | date:'h:mm a' }}</p>
+              </div>
+            </td>
+            <td class="py-4 px-4 text-right">
+              <button
+                (click)="logView.emit(log)"
+                class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="View details"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (totalLogs > pageSize) {
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+      <div class="text-sm text-gray-500">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalLogs) }} of {{ totalLogs }} logs
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          (click)="onPageChange(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Previous
+        </button>
+        <button
+          (click)="onPageChange(currentPage + 1)"
+          [disabled]="currentPage >= Math.ceil(totalLogs / pageSize)"
+          class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  }
+}

@@ -145,6 +145,14 @@ export const API_ENDPOINTS = {
     SUMMARY: (businessId: string) => `/dashboard/summary?businessId=${businessId}`,
   },
 
+  // Audit endpoints
+  AUDIT: {
+    BASE: '/audit',
+    BY_ENTITY: (entity: string, entityId: string) => `/audit/entity/${entity}/${entityId}`,
+    BY_USER: (userId: string) => `/audit/user/${userId}`,
+    BY_ACTION: (action: string) => `/audit/actions?action=${action}`,
+  },
+
   // Customer import
   CUSTOMERS_IMPORT: '/customers/import',
 } as const;
