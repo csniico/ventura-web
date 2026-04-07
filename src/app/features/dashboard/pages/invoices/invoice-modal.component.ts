@@ -35,12 +35,15 @@ export class InvoiceModalComponent implements OnChanges {
   protected customerOrders = computed(() => {
     const customerId = this.selectedCustomerId();
     if (!customerId) return [];
-    
-    // Only show COMPLETED orders that don't already have invoices
-    return this.availableOrders.filter(o => 
-      o.customerId === customerId && 
-      o.status === OrderStatus.COMPLETED && 
-      !o.invoiceId
+
+    const type = this.invoiceType();
+    const requiresCompletion = type === InvoiceType.STANDARD;
+
+    return this.availableOrders.filter(o =>
+      o.customerId === customerId &&
+      !o.invoiceId &&
+      o.status !== OrderStatus.CANCELLED &&
+      (!requiresCompletion || o.status === OrderStatus.COMPLETED)
     );
   });
 
@@ -61,16 +64,19 @@ export class InvoiceModalComponent implements OnChanges {
 
   protected isValid = computed(() => {
     const hasCustomer = this.selectedCustomerId() !== '';
-    const hasCompletedOrders = this.selectedOrderIds().length > 0;
+    const hasOrders = this.selectedOrderIds().length > 0;
     const hasDueDate = this.dueDate() !== '';
-    
-    // Additional validation: ensure selected orders are all completed
+
+    const type = this.invoiceType();
+    const requiresCompletion = type === InvoiceType.STANDARD;
     const selectedOrders = this.selectedOrders();
-    const allOrdersCompleted = selectedOrders.every(order => 
-      order.status === OrderStatus.COMPLETED && !order.invoiceId
+    const ordersValid = selectedOrders.every(order =>
+      !order.invoiceId &&
+      order.status !== OrderStatus.CANCELLED &&
+      (!requiresCompletion || order.status === OrderStatus.COMPLETED)
     );
-    
-    return hasCustomer && hasCompletedOrders && hasDueDate && allOrdersCompleted;
+
+    return hasCustomer && hasOrders && hasDueDate && ordersValid;
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -99,6 +105,11 @@ export class InvoiceModalComponent implements OnChanges {
     this.selectedOrderIds.set([]);
   }
 
+  protected onInvoiceTypeChange(type: InvoiceType): void {
+    this.invoiceType.set(type);
+    this.selectedOrderIds.set([]);
+  }
+
   protected toggleOrder(orderId: string): void {
     const current = this.selectedOrderIds();
     if (current.includes(orderId)) {
@@ -120,14 +131,17 @@ export class InvoiceModalComponent implements OnChanges {
   protected onSubmit(): void {
     if (!this.isValid() || this.isSubmitting()) return;
 
-    // Double-check that all selected orders are completed and don't have invoices
+    const type = this.invoiceType();
+    const requiresCompletion = type === InvoiceType.STANDARD;
     const selectedOrders = this.selectedOrders();
-    const invalidOrders = selectedOrders.filter(order => 
-      order.status !== OrderStatus.COMPLETED || order.invoiceId
+    const invalidOrders = selectedOrders.filter(order =>
+      order.invoiceId ||
+      order.status === OrderStatus.CANCELLED ||
+      (requiresCompletion && order.status !== OrderStatus.COMPLETED)
     );
-    
+
     if (invalidOrders.length > 0) {
-      console.error('Cannot create invoice: Some orders are not completed or already have invoices');
+      console.error('Cannot create invoice: Some orders are invalid for the selected invoice type');
       return;
     }
 
