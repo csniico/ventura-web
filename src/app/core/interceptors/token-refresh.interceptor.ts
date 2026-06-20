@@ -1,97 +1,82 @@
-import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, filter, take, switchMap, finalize } from 'rxjs/operators';
+import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { API_ENDPOINTS } from '../../shared/api.constants';
+import { TokenStorageService } from '../services/token-storage.service';
 
-// Shared state for token refresh
-let isRefreshing = false;
-const refreshTokenSubject = new BehaviorSubject<boolean | null>(null);
-
-// URLs that should not trigger token refresh
-const EXCLUDED_URLS = [
-  API_ENDPOINTS.AUTH.LOGIN,
-  API_ENDPOINTS.AUTH.REGISTER,
-  API_ENDPOINTS.AUTH.REFRESH_TOKEN,
-  API_ENDPOINTS.AUTH.GOOGLE_LOGIN,
-];
-
-function isExcludedUrl(url: string): boolean {
-  return EXCLUDED_URLS.some(excluded => url.includes(excluded));
+interface RefreshResponse {
+  accessToken: string;
+  refreshToken?: string;
 }
 
-function clearAuthAndRedirect(router: Router): void {
-  localStorage.removeItem('user');
-  router.navigate(['/auth/login']);
+// Shared state so concurrent 401s wait for a single in-flight refresh.
+let isRefreshing = false;
+const newTokenSubject = new BehaviorSubject<string | null>(null);
+
+// Auth endpoints must never trigger a refresh (they ARE the auth flow).
+function isAuthUrl(url: string): boolean {
+  return url.includes('/auth/');
 }
 
 export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   const http = inject(HttpClient);
   const router = inject(Router);
+  const tokens = inject(TokenStorageService);
+
+  const retryWithToken = (accessToken: string) =>
+    next(req.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } }));
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Only handle 401 errors for authenticated requests
-      if (error.status !== 401 || isExcludedUrl(req.url)) {
+      if (error.status !== 401 || isAuthUrl(req.url)) {
         return throwError(() => error);
       }
 
-      // Check if user is supposed to be authenticated
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        // User is not logged in, just redirect
+      const refreshToken = tokens.refreshToken;
+      if (!refreshToken) {
+        tokens.clear();
         router.navigate(['/auth/login']);
         return throwError(() => error);
       }
 
-      // Handle token refresh
       if (!isRefreshing) {
         isRefreshing = true;
-        refreshTokenSubject.next(null);
+        newTokenSubject.next(null);
 
-        const refreshUrl = `${environment.apiUrl}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`;
-
-        return http.post(refreshUrl, {}, { withCredentials: true }).pipe(
-          switchMap(() => {
-            isRefreshing = false;
-            refreshTokenSubject.next(true);
-            // Retry the original request
-            return next(req);
-          }),
-          catchError((refreshError) => {
-            isRefreshing = false;
-            refreshTokenSubject.next(false);
-            
-            // Only clear auth if refresh fails with 401/403
-            // Don't logout on other errors (network, server errors, etc.)
-            if (refreshError.status === 401 || refreshError.status === 403) {
-              clearAuthAndRedirect(router);
-            }
-            return throwError(() => refreshError);
-          }),
-          finalize(() => {
-            isRefreshing = false;
-          })
-        );
-      } else {
-        // Wait for the ongoing refresh to complete
-        return refreshTokenSubject.pipe(
-          filter(result => result !== null),
-          take(1),
-          switchMap(success => {
-            if (success) {
-              // Retry the original request
-              return next(req);
-            } else {
-              // Refresh failed
-              return throwError(() => error);
-            }
-          })
-        );
+        const refreshUrl = `${environment.apiUrl}${API_ENDPOINTS.AUTH.REFRESH}`;
+        return http
+          .post<RefreshResponse>(
+            refreshUrl,
+            { refreshToken },
+            { headers: { Authorization: `Bearer ${refreshToken}` } },
+          )
+          .pipe(
+            switchMap((res) => {
+              isRefreshing = false;
+              tokens.setTokens(res.accessToken, res.refreshToken);
+              newTokenSubject.next(res.accessToken);
+              return retryWithToken(res.accessToken);
+            }),
+            catchError((refreshError) => {
+              isRefreshing = false;
+              newTokenSubject.next(null);
+              tokens.clear();
+              router.navigate(['/auth/login']);
+              return throwError(() => refreshError);
+            }),
+          ) as Observable<any>;
       }
-    })
+
+      // A refresh is already in flight — wait for the new token, then retry.
+      return newTokenSubject.pipe(
+        filter((token) => token !== null),
+        take(1),
+        switchMap((token) => retryWithToken(token as string)),
+      );
+    }),
   );
 };

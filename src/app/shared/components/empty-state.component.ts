@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
-      <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+      <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
         <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="iconPath"/>
         </svg>

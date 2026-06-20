@@ -6,20 +6,30 @@ export enum AppointmentStatus {
   CANCELED = 'canceled'
 }
 
+/** An appointment invitee — either a linked customer or a free name/email. */
+export interface Invitee {
+  name: string;
+  email?: string;
+  customerId?: string;
+}
+
 export interface Appointment {
   id: string;
   title: string;
   description?: string;
   startTime: Date;
   endTime: Date;
+  location?: string;
   notes?: string;
   businessId: string;
   userId: string;
   customerId?: string;
   customer?: Customer;
+  invitees?: Invitee[];
   status: AppointmentStatus;
   isRecurring: boolean;
   recurringFrequency?: string;
+  recurringInterval?: number;
   recurringUntil?: string;
   googleEventId?: string;
   createdAt: Date;
@@ -31,11 +41,14 @@ export interface CreateAppointmentDto {
   description?: string;
   startTime: Date;
   endTime: Date;
+  location?: string;
   notes?: string;
-  businessId: string;
+  businessId?: string;
   customerId?: string;
+  invitees?: Invitee[];
   isRecurring: boolean;
   recurringFrequency?: string;
+  recurringInterval?: number;
   recurringUntil?: string;
 }
 

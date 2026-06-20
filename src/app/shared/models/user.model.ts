@@ -6,6 +6,7 @@ export interface User {
   email: string;
   googleId?: string;
   avatarUrl?: string;
+  avatarKey?: string;
   businessId?: string;
   isSystem: boolean;
   isActive: boolean;

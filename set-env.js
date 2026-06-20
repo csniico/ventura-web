@@ -10,7 +10,8 @@ if (!fs.existsSync(dir)) {
 const content = `
 export const environment = {
   production: true,
-  apiUrl: '${process.env.API_URL}'
+  apiUrl: '${process.env.API_URL}',
+  googleClientId: '${process.env.GOOGLE_CLIENT_ID || ''}'
 };
 `;
 

@@ -1,48 +1,40 @@
-import { User } from "./user.model";
+import { User } from './user.model';
 
-// Authentication Request DTOs
+// Authentication Request DTOs (mirror the mobile app / new backend)
 export interface LoginDto {
   email: string;
   password: string;
 }
 
-export interface SignUpDto {
-  firstName: string;
-  lastName?: string;
+/** Request a passwordless one-time code by email. */
+export interface EmailOtpDto {
   email: string;
-  password: string;
-  avatarUrl?: string;
 }
 
+/** Verify the emailed one-time code and sign in. */
 export interface VerifyCodeDto {
-  shortToken: string;
   email: string;
   code: string;
 }
 
-export interface ResendCodeDto {
-  id: string;
+/** Google sign-in: a Google ID token obtained client-side (GIS). */
+export interface GoogleSignInDto {
+  idToken: string;
 }
 
-export interface ConfirmEmailDto {
-  email: string;
+/** Apple sign-in (web flow). */
+export interface AppleSignInDto {
+  identityToken: string;
+  rawNonce?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
-export interface ResetPasswordDto {
-  newPassword: string;
-  userId: string;
-}
-
-// Authentication Response DTOs
-export interface SignUpResponse {
+// Authentication Response — returned by every sign-in / verify / refresh call.
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
   user: User;
-  shortToken: string;
-}
-
-export interface VerificationResponse {
-  success: boolean;
-  message: string;
-  userId?: string;
 }
 
 // Authentication State

@@ -1,26 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { API_ENDPOINTS } from '../../shared/api.constants';
+import { API_ENDPOINTS, PaginatedResponse, withId } from '../../shared';
 import {
   Invoice,
   CreateInvoiceDto,
   UpdateInvoicePaymentDto,
   UpdateInvoiceStatusDto,
   InvoiceStatus,
-  PaginatedInvoices
+  PaginatedInvoices,
 } from '../models/invoice.model';
 
-interface InvoicesApiResponse {
-  data: Invoice[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InvoiceService {
   private readonly http = inject(HttpClient);
@@ -30,64 +22,80 @@ export class InvoiceService {
     status?: InvoiceStatus,
     customerId?: string,
     limit?: number,
-    page?: number
+    page?: number,
   ): Observable<PaginatedInvoices> {
-    return this.http.get<InvoicesApiResponse>(
-      API_ENDPOINTS.INVOICES.LIST(businessId, status, customerId, limit, page)
-    ).pipe(
-      map(response => ({
-        invoices: response.data || [],
-        total: response.total || 0,
-        page: response.page || 1,
-        limit: response.limit || 20,
-        totalPages: response.totalPages || 1
-      }))
-    );
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (customerId) params = params.set('customerId', customerId);
+    if (limit) params = params.set('limit', limit);
+    if (page) params = params.set('page', page);
+    return this.http
+      .get<PaginatedResponse<any>>(API_ENDPOINTS.INVOICES.BASE, { params })
+      .pipe(map((res) => this.toPaginated(res)));
   }
 
   getInvoiceById(invoiceId: string, businessId: string): Observable<Invoice> {
-    return this.http.get<Invoice>(
-      API_ENDPOINTS.INVOICES.BY_ID(invoiceId, businessId)
-    );
+    return this.http.get<any>(API_ENDPOINTS.INVOICES.BY_ID(invoiceId)).pipe(map((i) => withId(i) as Invoice));
   }
 
   createInvoice(dto: CreateInvoiceDto): Observable<Invoice> {
-    return this.http.post<Invoice>(
-      API_ENDPOINTS.INVOICES.CREATE,
-      dto
-    );
+    const d = dto as any;
+    const payload: Record<string, unknown> = { orderIds: d.orderIds ?? [] };
+    if (d.invoiceType) payload['invoiceType'] = d.invoiceType;
+    if (d.dueDate) payload['dueDate'] = d.dueDate;
+    if (d.notes) payload['notes'] = d.notes;
+    return this.http.post<any>(API_ENDPOINTS.INVOICES.BASE, payload).pipe(map((i) => withId(i) as Invoice));
   }
 
-  updateInvoicePayment(invoiceId: string, businessId: string, dto: UpdateInvoicePaymentDto): Observable<Invoice> {
-    return this.http.patch<Invoice>(
-      API_ENDPOINTS.INVOICES.UPDATE_PAYMENT(invoiceId, businessId),
-      dto
-    );
+  updateInvoicePayment(
+    invoiceId: string,
+    businessId: string,
+    dto: UpdateInvoicePaymentDto,
+  ): Observable<Invoice> {
+    const d = dto as any;
+    const payload = {
+      amount: d.amount ?? d.amountPaid,
+      paymentMethod: d.paymentMethod,
+      paymentDate: d.paymentDate,
+    };
+    return this.http
+      .patch<any>(API_ENDPOINTS.INVOICES.PAYMENT(invoiceId), payload)
+      .pipe(map((i) => withId(i) as Invoice));
   }
 
-  updateInvoiceStatus(invoiceId: string, businessId: string, dto: UpdateInvoiceStatusDto): Observable<Invoice> {
-    return this.http.patch<Invoice>(
-      API_ENDPOINTS.INVOICES.UPDATE_STATUS(invoiceId, businessId),
-      dto
-    );
+  updateInvoiceStatus(
+    invoiceId: string,
+    businessId: string,
+    dto: UpdateInvoiceStatusDto,
+  ): Observable<Invoice> {
+    return this.http
+      .patch<any>(API_ENDPOINTS.INVOICES.STATUS(invoiceId), dto)
+      .pipe(map((i) => withId(i) as Invoice));
+  }
+
+  /** Send the invoice to the customer (email + optional message). */
+  sendInvoice(invoiceId: string, email?: string, message?: string): Observable<Invoice> {
+    return this.http
+      .post<any>(API_ENDPOINTS.INVOICES.SEND(invoiceId), { email, message })
+      .pipe(map((i) => withId(i) as Invoice));
   }
 
   getCustomerInvoices(
     customerId: string,
     businessId: string,
     limit?: number,
-    page?: number
+    page?: number,
   ): Observable<PaginatedInvoices> {
-    return this.http.get<InvoicesApiResponse>(
-      API_ENDPOINTS.INVOICES.CUSTOMER_INVOICES(customerId, businessId, limit, page)
-    ).pipe(
-      map(response => ({
-        invoices: response.data || [],
-        total: response.total || 0,
-        page: response.page || 1,
-        limit: response.limit || 20,
-        totalPages: response.totalPages || 1
-      }))
-    );
+    return this.getInvoices(businessId, undefined, customerId, limit, page);
+  }
+
+  private toPaginated(res: PaginatedResponse<any>): PaginatedInvoices {
+    return {
+      invoices: (res.data ?? []).map((i) => withId(i) as Invoice),
+      total: res.meta?.total ?? 0,
+      page: res.meta?.page ?? 1,
+      limit: res.meta?.limit ?? 20,
+      totalPages: res.meta?.totalPages ?? 1,
+    };
   }
 }

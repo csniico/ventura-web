@@ -11,7 +11,7 @@ export class AuthGuard implements CanActivate {
   private router = inject(Router);
 
   canActivate(): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    if (this.authService.isAuthenticated()) {
+    if (this.authService.isLoggedIn()) {
       return true;
     }
 
@@ -28,7 +28,7 @@ export class GuestGuard implements CanActivate {
   private router = inject(Router);
 
   canActivate(): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    if (!this.authService.isAuthenticated()) {
+    if (!this.authService.isLoggedIn()) {
       return true;
     }
 

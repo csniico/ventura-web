@@ -17,11 +17,8 @@ export class BusinessGuard implements CanActivate {
       return false;
     }
 
-    if (!user.isEmailVerified) {
-      this.router.navigate(['/auth/verify-email']);
-      return false;
-    }
-
+    // Email verification is part of sign-in now (OTP / Google / Apple), so
+    // there's no separate gate here — only redirect away once a business exists.
     if (user.businessId) {
       this.router.navigate(['/dashboard']);
       return false;

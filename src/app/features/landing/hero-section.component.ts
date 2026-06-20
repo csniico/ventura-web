@@ -8,44 +8,40 @@ import { RouterLink } from '@angular/router';
   imports: [CommonModule, RouterLink],
   template: `
     <section class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div class="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
       <div class="absolute top-0 right-0 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-      
-      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
-        <div class="text-center">          
-          <h1 class="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            Your Business,
-            <span class="text-primary">
-              Simplified
-            </span>
-          </h1>
-          
-          <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
-            The all-in-one platform that transforms how you manage products, orders, invoices, and customer relationships. 
-            <span class="font-semibold text-gray-800">Built for retailers, wholesalers, event planners, and service providers.</span>
-          </p>
-          
-          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <a routerLink="/auth/register" class="group bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 flex items-center">
-              Start Free Trial
-              <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-              </svg>
-            </a>
-            <a href="#demo" class="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-semibold hover:border-primary hover:text-primary transition-all duration-300 flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-9 5a9 9 0 1118 0H3z"></path>
-              </svg>
-              Watch Demo
-            </a>
+
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <!-- Copy -->
+          <div class="text-center lg:text-left">
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              Your whole business,
+              <span class="text-primary">in one place</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Customers, sales, invoices and your calendar, all connected in one app built for small businesses.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
+              <a routerLink="/auth/login" class="group bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 flex items-center">
+                Get started
+                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+              </a>
+              <a href="#features" class="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-semibold hover:border-primary hover:text-primary transition-all duration-300">
+                See what's inside
+              </a>
+            </div>
           </div>
-          
-          <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
-            <div class="text-sm text-gray-500">✓ No credit card required</div>
-            <div class="text-sm text-gray-500">✓ 14-day free trial</div>
-            <div class="text-sm text-gray-500">✓ Cancel anytime</div>
+
+          <!-- Hero image -->
+          <div class="relative">
+            <img
+              src="/images/ventura_manage_in_one_place.png"
+              alt="Manage your whole business in one place"
+              class="w-full rounded-2xl shadow-2xl ring-1 ring-black/5"
+            />
           </div>
         </div>
       </div>
@@ -58,15 +54,8 @@ import { RouterLink } from '@angular/router';
       66% { transform: translate(-20px, 20px) scale(0.9); }
       100% { transform: translate(0px, 0px) scale(1); }
     }
-    
     .animate-blob { animation: blob 7s infinite; }
     .animation-delay-2000 { animation-delay: 2s; }
-    .animation-delay-4000 { animation-delay: 4s; }
-    
-    .bg-grid-pattern {
-      background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
   `]
 })
 export class HeroSectionComponent {}

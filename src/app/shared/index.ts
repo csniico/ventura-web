@@ -11,6 +11,9 @@ export * from './components/loading-spinner.component';
 // Constants
 export * from './api.constants';
 
+// API mappers (_id -> id normalization)
+export * from './api-mappers';
+
 // Utilities
 export * from './helpers';
 export * from './validators';

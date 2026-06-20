@@ -15,9 +15,7 @@
       <!-- Header -->
       <div class="text-center mb-8">
         <div class="flex justify-center mb-6">
-          <div class="h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center">
-            <span class="text-white font-bold text-2xl">V</span>
-          </div>
+          <img src="/logo.png" alt="Ventura" class="h-12 w-12 object-contain" />
         </div>
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Set up your business</h1>
         <p class="text-gray-600">Let's get your business profile ready in just a few steps</p>
@@ -228,7 +226,7 @@
                         <img [src]="businessForm.get('logo')?.value" alt="Logo preview" class="w-full h-full object-cover" />
                       </div>
                     } @else {
-                      <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                      <div class="w-16 h-16 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
                         @if (isUploadingLogo()) {
                           <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                         } @else {

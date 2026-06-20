@@ -1,9 +1,6 @@
 @if (isOpen()) {
   <!-- Backdrop -->
-  <div
-    class="fixed inset-0 bg-gray-900/50 z-40 transition-opacity"
-    (click)="onBackdropClick($event)"
-  >
+  <div class="fixed inset-0 bg-gray-900/50 z-40 transition-opacity" (click)="onBackdropClick($event)">
     <!-- Modal -->
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -13,7 +10,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-semibold text-gray-900">
-            {{ modalMode() === 'edit' ? 'Edit Appointment' : 'New Appointment' }}
+            {{ modalMode() === 'edit' ? 'Edit appointment' : 'New appointment' }}
           </h3>
           <button
             type="button"
@@ -28,15 +25,9 @@
 
         <!-- Form -->
         <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="p-6 space-y-5">
-          <!-- Error Message -->
           @if (errorMessage()) {
             <div class="rounded-md bg-red-50 p-4 border border-red-200">
-              <div class="flex">
-                <svg class="h-5 w-5 text-red-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <p class="ml-3 text-sm text-red-800">{{ errorMessage() }}</p>
-              </div>
+              <p class="text-sm text-red-800">{{ errorMessage() }}</p>
             </div>
           }
 
@@ -51,77 +42,32 @@
               formControlName="title"
               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
               [class.border-red-300]="title?.invalid && title?.touched"
-              placeholder="Enter appointment title"
+              placeholder="Appointment title"
             />
             @if (title?.invalid && title?.touched) {
-              <p class="mt-1 text-sm text-red-600">
-                @if (title?.errors?.['required']) {
-                  Title is required
-                } @else if (title?.errors?.['maxlength']) {
-                  Title must be less than 100 characters
-                }
-              </p>
+              <p class="mt-1 text-sm text-red-600">Title is required</p>
             }
           </div>
 
-          <!-- Description -->
+          <!-- Date -->
           <div>
-            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-              Description
+            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">
+              Date <span class="text-red-500">*</span>
             </label>
-            <textarea
-              id="description"
-              formControlName="description"
-              rows="2"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
-              placeholder="Optional description"
-            ></textarea>
+            <input
+              type="date"
+              id="date"
+              formControlName="date"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              [class.border-red-300]="date?.invalid && date?.touched"
+            />
           </div>
 
-          <!-- Customer -->
-          <div>
-            <label for="customerId" class="block text-sm font-medium text-gray-700 mb-1">
-              Customer
-            </label>
-            <div class="relative">
-              <select
-                id="customerId"
-                formControlName="customerId"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white appearance-none pr-10"
-              >
-                <option value="">No customer selected</option>
-                @for (customer of customers(); track customer.id) {
-                  <option [value]="customer.id">
-                    {{ customer.name }}{{ customer.email ? ' - ' + customer.email : '' }}
-                  </option>
-                }
-              </select>
-              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-              </div>
-            </div>
-            <p class="mt-1 text-xs text-gray-500">Link this appointment to a customer (optional)</p>
-          </div>
-
-          <!-- Start Date/Time Row -->
+          <!-- Start / End time -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">
-                Start Date <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                formControlName="startDate"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                [class.border-red-300]="startDate?.invalid && startDate?.touched"
-              />
-            </div>
-            <div>
               <label for="startTime" class="block text-sm font-medium text-gray-700 mb-1">
-                Start Time <span class="text-red-500">*</span>
+                Starts <span class="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -131,25 +77,9 @@
                 [class.border-red-300]="startTime?.invalid && startTime?.touched"
               />
             </div>
-          </div>
-
-          <!-- End Date/Time Row -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">
-                End Date <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                formControlName="endDate"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                [class.border-red-300]="endDate?.invalid && endDate?.touched"
-              />
-            </div>
             <div>
               <label for="endTime" class="block text-sm font-medium text-gray-700 mb-1">
-                End Time <span class="text-red-500">*</span>
+                Ends <span class="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -161,77 +91,151 @@
             </div>
           </div>
 
-          <!-- Date Range Error -->
-          @if (!isDateRangeValid() && startDate?.value && startTime?.value && endDate?.value && endTime?.value) {
-            <p class="text-sm text-red-600 -mt-3">End date/time must be after start date/time</p>
-          }
+          <!-- Location -->
+          <div>
+            <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <input
+              type="text"
+              id="location"
+              formControlName="location"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              placeholder="Optional"
+            />
+          </div>
+
+          <!-- Repeat -->
+          <div class="rounded-md border border-gray-200">
+            <label class="flex items-center justify-between px-4 py-3 cursor-pointer">
+              <div>
+                <span class="text-sm font-medium text-gray-700">Repeat</span>
+                <p class="text-xs text-gray-500">
+                  {{ isRecurring?.value ? 'Recurring appointment' : 'One-time appointment' }}
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                formControlName="isRecurring"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+              />
+            </label>
+
+            @if (isRecurring?.value) {
+              <div class="border-t border-gray-200 p-4 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label for="recurringFrequency" class="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                    <select
+                      id="recurringFrequency"
+                      formControlName="recurringFrequency"
+                      class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                    >
+                      @for (freq of recurringFrequencies; track freq.value) {
+                        <option [value]="freq.value">{{ freq.label }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <label for="recurringInterval" class="block text-sm font-medium text-gray-700 mb-1">Every</label>
+                    <input
+                      type="number"
+                      id="recurringInterval"
+                      formControlName="recurringInterval"
+                      min="1"
+                      class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label for="recurringUntil" class="block text-sm font-medium text-gray-700 mb-1">
+                    Ends on <span class="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    id="recurringUntil"
+                    formControlName="recurringUntil"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Invitees -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Invitees</label>
+
+            @if (invitees().length) {
+              <div class="flex flex-wrap gap-2 mb-3">
+                @for (inv of invitees(); track $index) {
+                  <span class="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
+                    {{ inv.name }}{{ inv.email ? ' · ' + inv.email : '' }}
+                    <button
+                      type="button"
+                      (click)="removeInvitee($index)"
+                      class="text-gray-400 hover:text-gray-700"
+                      aria-label="Remove invitee"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- Add invitee row -->
+            <div [formGroup]="inviteeForm" class="space-y-2">
+              <select
+                formControlName="customerId"
+                (change)="onInviteeCustomerChange()"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+              >
+                <option value="">Pick a customer (optional)</option>
+                @for (customer of customers(); track customer.id) {
+                  <option [value]="customer.id">
+                    {{ customer.name }}{{ customer.email ? ' - ' + customer.email : '' }}
+                  </option>
+                }
+              </select>
+              <div class="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  formControlName="name"
+                  placeholder="Name"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+                <input
+                  type="email"
+                  formControlName="email"
+                  placeholder="Email (optional)"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                (click)="addInvitee()"
+                class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add invitee
+              </button>
+            </div>
+          </div>
 
           <!-- Notes -->
           <div>
-            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
-              Notes
-            </label>
+            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <textarea
               id="notes"
               formControlName="notes"
               rows="2"
               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
-              placeholder="Optional notes"
+              placeholder="Optional"
             ></textarea>
           </div>
-
-          <!-- Recurring Toggle -->
-          <div class="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="isRecurring"
-              formControlName="isRecurring"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-            />
-            <label for="isRecurring" class="text-sm font-medium text-gray-700 cursor-pointer">
-              Recurring appointment
-            </label>
-          </div>
-
-          <!-- Recurring Options (conditional) -->
-          @if (isRecurring?.value) {
-            <div class="pl-6 space-y-4 border-l-2 border-blue-100 ml-2">
-              <div>
-                <label for="recurringFrequency" class="block text-sm font-medium text-gray-700 mb-1">
-                  Frequency <span class="text-red-500">*</span>
-                </label>
-                <select
-                  id="recurringFrequency"
-                  formControlName="recurringFrequency"
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                  [class.border-red-300]="recurringFrequency?.invalid && recurringFrequency?.touched"
-                >
-                  <option value="">Select frequency</option>
-                  @for (freq of recurringFrequencies; track freq.value) {
-                    <option [value]="freq.value">{{ freq.label }}</option>
-                  }
-                </select>
-                @if (recurringFrequency?.invalid && recurringFrequency?.touched) {
-                  <p class="mt-1 text-sm text-red-600">Frequency is required</p>
-                }
-              </div>
-              <div>
-                <label for="recurringUntil" class="block text-sm font-medium text-gray-700 mb-1">
-                  Repeat Until <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  id="recurringUntil"
-                  formControlName="recurringUntil"
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  [class.border-red-300]="recurringUntil?.invalid && recurringUntil?.touched"
-                />
-                @if (recurringUntil?.invalid && recurringUntil?.touched) {
-                  <p class="mt-1 text-sm text-red-600">End date is required</p>
-                }
-              </div>
-            </div>
-          }
         </form>
 
         <!-- Footer -->
@@ -259,7 +263,7 @@
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
               (click)="onSubmit()"
               [disabled]="isLoading()"
               class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -271,7 +275,7 @@
                 </svg>
                 Saving...
               } @else {
-                {{ modalMode() === 'edit' ? 'Update' : 'Create' }}
+                {{ modalMode() === 'edit' ? 'Save changes' : 'Create appointment' }}
               }
             </button>
           </div>

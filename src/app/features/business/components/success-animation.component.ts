@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
       <div class="relative">
         <!-- Success Circle -->
         <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-scale-in">
-          <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center animate-bounce-in">
+          <div class="w-16 h-160 rounded-full flex items-center justify-center animate-bounce-in">
             <svg class="w-8 h-8 text-white animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
             </svg>

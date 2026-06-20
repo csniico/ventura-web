@@ -46,10 +46,6 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/invoice-detail/invoice-detail.component').then(m => m.InvoiceDetailComponent)
       },
       {
-        path: 'audit',
-        loadComponent: () => import('./pages/audit/audit.component').then(m => m.AuditComponent)
-      },
-      {
         path: 'settings',
         loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent)
       },

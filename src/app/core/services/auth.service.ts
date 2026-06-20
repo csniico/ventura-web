@@ -1,23 +1,18 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { UserService } from './user.service';
+import { Observable, tap, map, catchError, throwError } from 'rxjs';
 import {
   LoginDto,
-  SignUpDto,
+  EmailOtpDto,
   VerifyCodeDto,
-  ResendCodeDto,
-  ConfirmEmailDto,
-  ResetPasswordDto,
-  SignUpResponse,
-  VerificationResponse,
-  AuthState,
+  AppleSignInDto,
+  AuthResponse,
   User,
-  ApiResponse,
+  withId,
   API_ENDPOINTS,
 } from '../../shared';
+import { TokenStorageService } from './token-storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -25,7 +20,7 @@ import {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private userService = inject(UserService);
+  private tokens = inject(TokenStorageService);
 
   // Public readonly signals
   readonly user = signal<User | null>(null);
@@ -37,217 +32,134 @@ export class AuthService {
     this.initializeAuth();
   }
 
-  // Initialize authentication state (check if user is logged in via cookie)
+  // Rehydrate from the stored session (access token + cached user).
   private initializeAuth(): void {
-    // Just check if user data exists - auth state managed by httpOnly cookies
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData) as User;
-        this.setAuthState(user, true);
-      } catch (error) {
-        this.clearAuthState();
-      }
+    const user = this.tokens.getUser();
+    if (user && this.tokens.hasSession()) {
+      this.setAuthState(user, true);
     }
   }
 
-  // Login user
+  /** Email + password sign-in. */
   login(credentials: LoginDto): Observable<User> {
     this.clearError();
-
-    return this.http.post<User>(API_ENDPOINTS.AUTH.LOGIN, credentials).pipe(
-      tap((user) => {
-        this.handleLoginSuccess(user);
-      }),
-      catchError((error) => {
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Register user
-  register(userData: SignUpDto): Observable<SignUpResponse> {
     this.setLoading(true);
-    this.clearError();
-
-    return this.http.post<SignUpResponse>(API_ENDPOINTS.AUTH.REGISTER, userData).pipe(
-      tap(() => {
-        this.setLoading(false);
-      }),
-      catchError((error) => {
-        this.handleAuthError('Registration failed. Please try again.');
-        return throwError(() => error);
-      })
+    return this.http.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGN_IN_PASSWORD, credentials).pipe(
+      map((res) => this.handleAuthSuccess(res)),
+      catchError((error) => this.fail(error, 'Sign-in failed. Check your email and password.')),
     );
   }
 
-  // Verify email code
+  /** Step 1 of passwordless sign-in: request a one-time code by email. */
+  requestEmailCode(data: EmailOtpDto): Observable<{ message?: string }> {
+    this.clearError();
+    this.setLoading(true);
+    return this.http.post<{ message?: string }>(API_ENDPOINTS.AUTH.SIGN_IN_EMAIL, data).pipe(
+      tap(() => this.setLoading(false)),
+      catchError((error) => this.fail(error, 'Could not send the code. Please try again.')),
+    );
+  }
+
+  /** Step 2 of passwordless sign-in: verify the emailed code. */
   verifyCode(data: VerifyCodeDto): Observable<User> {
-    this.setLoading(true);
     this.clearError();
-
-    return this.http.post<User>(API_ENDPOINTS.AUTH.VERIFY_CODE, data).pipe(
-      tap((user) => {
-        this.setLoading(false);
-        // Store user data after successful verification
-        localStorage.setItem('user', JSON.stringify(user));
-        this.setAuthState(user, true);
-      }),
-      catchError((error) => {
-        this.handleAuthError('Verification failed. Please check your code.');
-        return throwError(() => error);
-      })
+    this.setLoading(true);
+    return this.http.post<AuthResponse>(API_ENDPOINTS.AUTH.VERIFY_CODE, data).pipe(
+      map((res) => this.handleAuthSuccess(res)),
+      catchError((error) => this.fail(error, 'Verification failed. Please check your code.')),
     );
   }
 
-  // Resend verification code
-  resendCode(data: ResendCodeDto): Observable<ApiResponse> {
-    this.setLoading(true);
+  /** Google sign-in with an ID token obtained from Google Identity Services. */
+  signInWithGoogle(idToken: string): Observable<User> {
     this.clearError();
-
-    return this.http.post<ApiResponse>(API_ENDPOINTS.AUTH.RESEND_CODE, data).pipe(
-      tap(() => {
-        this.setLoading(false);
-      }),
-      catchError((error) => {
-        this.handleAuthError('Failed to resend code. Please try again.');
-        return throwError(() => error);
-      })
+    this.setLoading(true);
+    return this.http.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGN_IN_GOOGLE, { idToken }).pipe(
+      map((res) => this.handleAuthSuccess(res)),
+      catchError((error) => this.fail(error, 'Google sign-in failed. Please try again.')),
     );
   }
 
-  // Confirm email for password reset
-  confirmEmail(data: ConfirmEmailDto): Observable<ApiResponse> {
-    this.setLoading(true);
+  /** Apple sign-in (web flow). */
+  signInWithApple(data: AppleSignInDto): Observable<User> {
     this.clearError();
-
-    return this.http.post<ApiResponse>(API_ENDPOINTS.AUTH.CONFIRM_EMAIL, data).pipe(
-      tap(() => {
-        this.setLoading(false);
-      }),
-      catchError((error) => {
-        this.handleAuthError('Email confirmation failed. Please try again.');
-        return throwError(() => error);
-      })
+    this.setLoading(true);
+    return this.http.post<AuthResponse>(API_ENDPOINTS.AUTH.SIGN_IN_APPLE, data).pipe(
+      map((res) => this.handleAuthSuccess(res)),
+      catchError((error) => this.fail(error, 'Apple sign-in failed. Please try again.')),
     );
   }
 
-  // Reset password
-  resetPassword(data: ResetPasswordDto): Observable<ApiResponse> {
-    this.setLoading(true);
-    this.clearError();
-
-    return this.http.post<ApiResponse>(API_ENDPOINTS.AUTH.RESET_PASSWORD, data).pipe(
-      tap(() => {
-        this.setLoading(false);
-      }),
-      catchError((error) => {
-        this.handleAuthError('Password reset failed. Please try again.');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Logout user
+  /** Logout is local-only — clear the session and return to the login screen. */
   logout(): void {
-    this.http.post(API_ENDPOINTS.AUTH.LOGOUT, {}).subscribe({
-      complete: () => {
-        this.clearAuthState();
-        this.router.navigate(['/auth/login']);
-      },
-    });
-  }
-
-  // Refresh access token using refresh token (called by interceptor)
-  refreshToken(): Observable<void> {
-    return this.http.post<void>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {});
-  }
-
-  // Force logout (called when refresh token fails)
-  forceLogout(): void {
     this.clearAuthState();
     this.router.navigate(['/auth/login']);
   }
 
-  // Initiate Google OAuth login
-  loginWithGoogle(): void {
-    // Redirect to backend Google OAuth endpoint
-    const googleAuthUrl = `${environment.apiUrl}${API_ENDPOINTS.AUTH.GOOGLE_LOGIN}`;
-    window.location.href = googleAuthUrl;
+  forceLogout(): void {
+    this.logout();
   }
 
-  // Fetch user data by ID (for Google OAuth callback)
-  fetchUserById(userId: string): Observable<User> {
-    this.setLoading(true);
-    this.clearError();
-
-    return this.userService.getUserById(userId).pipe(
-      tap((user) => {
-        this.setLoading(false);
-        this.handleLoginSuccess(user);
-      }),
-      catchError((error) => {
-        this.handleAuthError('Failed to fetch user data. Please try again.');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Handle successful login
-  private handleLoginSuccess(user: User): void {
-    // Store only user data - auth tokens handled by httpOnly cookies
-    localStorage.setItem('user', JSON.stringify(user));
-    
-    // Update auth state
+  // Persist tokens + user, flip auth state, and route into the app.
+  private handleAuthSuccess(res: AuthResponse): User {
+    const user = withId(res.user) as User;
+    this.tokens.setTokens(res.accessToken, res.refreshToken);
+    this.tokens.setUser(user);
+    this.setLoading(false);
     this.setAuthState(user, true);
+    this.routeAfterAuth(user);
+    return user;
+  }
 
-    // Navigate based on email verification and business setup
-    if (!user.isEmailVerified) {
-      this.router.navigate(['/auth/verify-email']);
-    } else if (!user.businessId) {
+  /** No business yet → onboarding; otherwise the dashboard. */
+  private routeAfterAuth(user: User): void {
+    if (!user.businessId) {
       this.router.navigate(['/business/setup']);
     } else {
       this.router.navigate(['/dashboard']);
     }
   }
 
-  // Handle authentication errors
-  private handleAuthError(message: string): void {
+  private fail(error: unknown, message: string): Observable<never> {
     this.setLoading(false);
     this.error.set(message);
+    return throwError(() => error);
   }
 
-  // Set authentication state
   private setAuthState(user: User, isAuthenticated: boolean): void {
     this.user.set(user);
     this.isAuthenticated.set(isAuthenticated);
   }
 
-  // Clear authentication state
   private clearAuthState(): void {
-    localStorage.removeItem('user');
+    this.tokens.clear();
     this.user.set(null);
     this.isAuthenticated.set(false);
     this.error.set(null);
   }
 
-  // Set loading state
   private setLoading(loading: boolean): void {
     this.isLoading.set(loading);
   }
 
-  // Clear error state
   private clearError(): void {
     this.error.set(null);
   }
 
-  // Check if user is authenticated
   isLoggedIn(): boolean {
-    return this.isAuthenticated();
+    return this.isAuthenticated() || this.tokens.hasSession();
   }
 
-  // Get current user
   getCurrentUser(): User | null {
-    return this.user();
+    return this.user() ?? this.tokens.getUser();
+  }
+
+  /** Refresh the cached user after a profile/business change. */
+  updateCachedUser(patch: Partial<User>): void {
+    const current = this.getCurrentUser();
+    if (!current) return;
+    const next = { ...current, ...patch } as User;
+    this.tokens.setUser(next);
+    this.user.set(next);
   }
 }

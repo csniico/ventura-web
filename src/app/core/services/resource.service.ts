@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-import { API_ENDPOINTS } from '../../shared/api.constants';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map, switchMap } from 'rxjs';
+import { API_ENDPOINTS, PaginatedResponse, withId, withIds } from '../../shared';
 import {
   Product,
   Service,
@@ -9,108 +9,125 @@ import {
   CreateServiceDto,
   UpdateProductDto,
   UpdateServiceDto,
-  ResourceSearchResponse
+  ResourceSearchResponse,
 } from '../models/resource.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ResourceService {
   private readonly http = inject(HttpClient);
 
-  // Get all products (uses search endpoint)
+  // ---- Products -----------------------------------------------------------
+
   getProducts(businessId: string): Observable<Product[]> {
-    return this.http.get<ResourceSearchResponse>(
-      API_ENDPOINTS.RESOURCES.SEARCH(businessId, '', 100)
-    ).pipe(
-      map(response => response.products || [])
-    );
+    return this.listByType('product', 100).pipe(map((r) => (r.products ?? []) as Product[]));
   }
 
-  // Get single product by ID
   getProductById(businessId: string, productId: string): Observable<Product> {
-    return this.http.get<Product>(
-      API_ENDPOINTS.RESOURCES.PRODUCT_BY_ID(businessId, productId)
-    );
+    return this.http.get<any>(API_ENDPOINTS.RESOURCES.BY_ID(productId)).pipe(map((p) => withId(p) as Product));
   }
 
   createProduct(dto: CreateProductDto): Observable<Product> {
-    return this.http.post<Product>(
-      API_ENDPOINTS.RESOURCES.CREATE_PRODUCT,
-      dto
-    );
+    return this.http
+      .post<any>(API_ENDPOINTS.RESOURCES.BASE, { type: 'product', ...this.strip(dto) })
+      .pipe(map((p) => withId(p) as Product));
   }
 
   updateProduct(productId: string, businessId: string, dto: UpdateProductDto): Observable<Product> {
-    return this.http.put<Product>(
-      API_ENDPOINTS.RESOURCES.UPDATE_PRODUCT(productId, businessId),
-      dto
-    );
+    return this.http
+      .patch<any>(API_ENDPOINTS.RESOURCES.BY_ID(productId), this.strip(dto))
+      .pipe(map((p) => withId(p) as Product));
   }
 
   deleteProduct(productId: string, businessId: string): Observable<void> {
-    return this.http.delete<void>(
-      API_ENDPOINTS.RESOURCES.DELETE_PRODUCT(productId, businessId)
-    );
+    return this.http.delete<void>(API_ENDPOINTS.RESOURCES.BY_ID(productId));
   }
 
-  // Get all services (uses search endpoint)
+  // ---- Services -----------------------------------------------------------
+
   getServices(businessId: string): Observable<Service[]> {
-    return this.http.get<ResourceSearchResponse>(
-      API_ENDPOINTS.RESOURCES.SEARCH(businessId, '', 100)
-    ).pipe(
-      map(response => response.services || [])
-    );
+    return this.listByType('service', 100).pipe(map((r) => (r.services ?? []) as Service[]));
   }
 
-  // Get single service by ID
   getServiceById(businessId: string, serviceId: string): Observable<Service> {
-    return this.http.get<Service>(
-      API_ENDPOINTS.RESOURCES.SERVICE_BY_ID(businessId, serviceId)
-    );
+    return this.http.get<any>(API_ENDPOINTS.RESOURCES.BY_ID(serviceId)).pipe(map((s) => withId(s) as Service));
   }
 
   createService(dto: CreateServiceDto): Observable<Service> {
-    return this.http.post<Service>(
-      API_ENDPOINTS.RESOURCES.CREATE_SERVICE,
-      dto
-    );
+    return this.http
+      .post<any>(API_ENDPOINTS.RESOURCES.BASE, { type: 'service', ...this.strip(dto) })
+      .pipe(map((s) => withId(s) as Service));
   }
 
   updateService(serviceId: string, businessId: string, dto: UpdateServiceDto): Observable<Service> {
-    return this.http.put<Service>(
-      API_ENDPOINTS.RESOURCES.UPDATE_SERVICE(serviceId, businessId),
-      dto
-    );
+    return this.http
+      .patch<any>(API_ENDPOINTS.RESOURCES.BY_ID(serviceId), this.strip(dto))
+      .pipe(map((s) => withId(s) as Service));
   }
 
   deleteService(serviceId: string, businessId: string): Observable<void> {
-    return this.http.delete<void>(
-      API_ENDPOINTS.RESOURCES.DELETE_SERVICE(serviceId, businessId)
+    return this.http.delete<void>(API_ENDPOINTS.RESOURCES.BY_ID(serviceId));
+  }
+
+  // ---- Search / combined --------------------------------------------------
+
+  searchResources(
+    businessId: string,
+    query?: string,
+    limit?: number,
+    page?: number,
+  ): Observable<ResourceSearchResponse> {
+    let params = new HttpParams();
+    if (query) params = params.set('q', query);
+    if (limit) params = params.set('limit', limit);
+    if (page) params = params.set('page', page);
+    return this.http.get<PaginatedResponse<any>>(API_ENDPOINTS.RESOURCES.BASE, { params }).pipe(
+      map((res) => this.split(res.data)),
     );
   }
 
-  // Search - returns both products and services
-  searchResources(businessId: string, query?: string, limit?: number, page?: number): Observable<ResourceSearchResponse> {
-    return this.http.get<ResourceSearchResponse>(
-      API_ENDPOINTS.RESOURCES.SEARCH(businessId, query, limit, page)
-    );
-  }
-
-  // Get all resources (products + services) at once
   getAllResources(businessId: string): Observable<ResourceSearchResponse> {
-    return this.http.get<ResourceSearchResponse>(
-      API_ENDPOINTS.RESOURCES.SEARCH(businessId, '', 100)
-    );
+    return this.searchResources(businessId, '', 100, 1);
   }
 
-  // Image upload
+  /**
+   * Two-step upload: presign, then PUT the bytes straight to storage. Returns
+   * the public URL the caller stores on the entity.
+   */
   uploadImage(file: File): Observable<{ url: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<{ url: string }>(
-      API_ENDPOINTS.STORAGE.UPLOAD_IMAGE,
-      formData
-    );
+    return this.http
+      .post<{ uploadUrl: string; url: string; key: string }>(API_ENDPOINTS.FILES.PRESIGN, {
+        filename: file.name,
+        contentType: file.type,
+        folder: 'resources',
+      })
+      .pipe(
+        switchMap((presign) =>
+          this.http
+            .put(presign.uploadUrl, file, { headers: { 'Content-Type': file.type } })
+            .pipe(map(() => ({ url: presign.url }))),
+        ),
+      );
+  }
+
+  private listByType(type: 'product' | 'service', limit: number): Observable<ResourceSearchResponse> {
+    const params = new HttpParams().set('type', type).set('limit', limit);
+    return this.http
+      .get<PaginatedResponse<any>>(API_ENDPOINTS.RESOURCES.BASE, { params })
+      .pipe(map((res) => this.split(res.data)));
+  }
+
+  private split(rows: any[]): ResourceSearchResponse {
+    const all = withIds(rows ?? []);
+    return {
+      products: all.filter((r) => r['type'] === 'product') as unknown as Product[],
+      services: all.filter((r) => r['type'] === 'service') as unknown as Service[],
+    };
+  }
+
+  private strip<T extends Record<string, any>>(obj: T): Omit<T, 'businessId'> {
+    const { businessId, ...rest } = obj as Record<string, any>;
+    return rest as Omit<T, 'businessId'>;
   }
 }

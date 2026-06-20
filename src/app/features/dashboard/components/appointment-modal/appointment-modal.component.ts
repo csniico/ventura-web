@@ -3,22 +3,20 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { CalendarStateService } from '../../services/calendar-state.service';
-import { AuthService } from '../../../../core/services/auth.service';
 import { BusinessService } from '../../../../core/services/business.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { Appointment, CreateAppointmentDto } from '../../../../shared/models/appointment.model';
+import { Appointment, CreateAppointmentDto, Invitee } from '../../../../shared/models/appointment.model';
 
 @Component({
   selector: 'app-appointment-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './appointment-modal.component.html'
+  templateUrl: './appointment-modal.component.html',
 })
 export class AppointmentModalComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly calendarState = inject(CalendarStateService);
-  private readonly authService = inject(AuthService);
   private readonly businessService = inject(BusinessService);
   private readonly appointmentService = inject(AppointmentService);
   private readonly notificationService = inject(NotificationService);
@@ -32,49 +30,48 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
 
   protected isLoading = signal(false);
   protected errorMessage = signal('');
+  protected invitees = signal<Invitee[]>([]);
 
+  // Recurrence frequencies match the backend (daily | weekly | monthly).
   protected readonly recurringFrequencies = [
-    { value: 'DAILY', label: 'Daily' },
-    { value: 'WEEKLY', label: 'Weekly' },
-    { value: 'MONTHLY', label: 'Monthly' },
-    { value: 'YEARLY', label: 'Yearly' }
+    { value: 'daily', label: 'Daily' },
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'monthly', label: 'Monthly' },
   ];
 
+  // Main form mirrors the mobile flow: a single date + start/end times.
   protected readonly appointmentForm: FormGroup = this.fb.group({
-    title: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
-    description: ['', [Validators.maxLength(500)]],
-    customerId: [''],
-    startDate: ['', [Validators.required]],
+    title: ['', [Validators.required, Validators.maxLength(100)]],
+    date: ['', [Validators.required]],
     startTime: ['', [Validators.required]],
-    endDate: ['', [Validators.required]],
     endTime: ['', [Validators.required]],
+    location: [''],
     notes: ['', [Validators.maxLength(1000)]],
     isRecurring: [false],
-    recurringFrequency: [''],
-    recurringUntil: ['']
+    recurringFrequency: ['weekly'],
+    recurringInterval: [1, [Validators.min(1)]],
+    recurringUntil: [''],
   });
 
-  // Form control getters
+  // Separate sub-form for adding an invitee (customer pick or free name/email).
+  protected readonly inviteeForm: FormGroup = this.fb.group({
+    customerId: [''],
+    name: [''],
+    email: [''],
+  });
+
   get title() { return this.appointmentForm.get('title'); }
-  get description() { return this.appointmentForm.get('description'); }
-  get customerId() { return this.appointmentForm.get('customerId'); }
-  get startDate() { return this.appointmentForm.get('startDate'); }
+  get date() { return this.appointmentForm.get('date'); }
   get startTime() { return this.appointmentForm.get('startTime'); }
-  get endDate() { return this.appointmentForm.get('endDate'); }
   get endTime() { return this.appointmentForm.get('endTime'); }
-  get notes() { return this.appointmentForm.get('notes'); }
   get isRecurring() { return this.appointmentForm.get('isRecurring'); }
   get recurringFrequency() { return this.appointmentForm.get('recurringFrequency'); }
-  get recurringUntil() { return this.appointmentForm.get('recurringUntil'); }
 
   constructor() {
-    // Watch for modal state changes and populate form
     effect(() => {
       const appointment = this.selectedAppointment();
       const prefilled = this.prefilledDate();
-      const isOpen = this.isOpen();
-
-      if (isOpen) {
+      if (this.isOpen()) {
         if (appointment && this.modalMode() === 'edit') {
           this.populateForm(appointment);
         } else if (prefilled) {
@@ -86,194 +83,147 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
-    // Watch isRecurring to toggle validators
-    this.isRecurring?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(isRecurring => {
-        this.toggleRecurringValidators(isRecurring);
-      });
-  }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  private populateForm(appointment: Appointment): void {
-    const startDate = new Date(appointment.startTime);
-    const endDate = new Date(appointment.endTime);
+  // ---- Invitees -----------------------------------------------------------
 
+  protected onInviteeCustomerChange(): void {
+    const id = this.inviteeForm.value.customerId;
+    if (!id) return;
+    const customer = this.customers().find((c) => c.id === id);
+    if (customer) {
+      this.inviteeForm.patchValue({ name: customer.name, email: customer.email || '' });
+    }
+  }
+
+  protected addInvitee(): void {
+    const { customerId, name, email } = this.inviteeForm.value;
+    const trimmedName = (name || '').trim();
+    const trimmedEmail = (email || '').trim();
+    if (!trimmedName && !customerId) return;
+
+    const invitee: Invitee = {
+      name: trimmedName || 'Invitee',
+      email: trimmedEmail || undefined,
+      customerId: customerId || undefined,
+    };
+    const exists = this.invitees().some(
+      (i) =>
+        (invitee.customerId && i.customerId === invitee.customerId) ||
+        (invitee.email && i.email === invitee.email),
+    );
+    if (!exists) this.invitees.update((list) => [...list, invitee]);
+    this.inviteeForm.reset({ customerId: '', name: '', email: '' });
+  }
+
+  protected removeInvitee(index: number): void {
+    this.invitees.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  // ---- Populate / reset ---------------------------------------------------
+
+  private populateForm(appointment: Appointment): void {
+    const start = new Date(appointment.startTime);
+    const end = new Date(appointment.endTime);
     this.appointmentForm.patchValue({
       title: appointment.title,
-      description: appointment.description || '',
-      customerId: appointment.customerId || '',
-      startDate: this.formatDateForInput(startDate),
-      startTime: this.formatTimeForInput(startDate),
-      endDate: this.formatDateForInput(endDate),
-      endTime: this.formatTimeForInput(endDate),
+      date: this.dateInput(start),
+      startTime: this.timeInput(start),
+      endTime: this.timeInput(end),
+      location: appointment.location || '',
       notes: appointment.notes || '',
       isRecurring: appointment.isRecurring,
-      recurringFrequency: appointment.recurringFrequency || '',
-      recurringUntil: appointment.recurringUntil ? this.formatDateForInput(new Date(appointment.recurringUntil)) : ''
+      recurringFrequency: (appointment.recurringFrequency || 'weekly').toLowerCase(),
+      recurringInterval: appointment.recurringInterval || 1,
+      recurringUntil: appointment.recurringUntil ? this.dateInput(new Date(appointment.recurringUntil)) : '',
     });
-
-    this.toggleRecurringValidators(appointment.isRecurring);
+    this.invitees.set(appointment.invitees ? [...appointment.invitees] : []);
   }
 
   private prefillDate(date: Date): void {
     this.resetForm();
-    const dateStr = this.formatDateForInput(date);
-
-    // Default to 9 AM - 10 AM
     this.appointmentForm.patchValue({
-      startDate: dateStr,
+      date: this.dateInput(date),
       startTime: '09:00',
-      endDate: dateStr,
-      endTime: '10:00'
+      endTime: '10:00',
     });
   }
 
   private resetForm(): void {
     this.appointmentForm.reset({
       title: '',
-      description: '',
-      customerId: '',
-      startDate: '',
+      date: '',
       startTime: '',
-      endDate: '',
       endTime: '',
+      location: '',
       notes: '',
       isRecurring: false,
-      recurringFrequency: '',
-      recurringUntil: ''
+      recurringFrequency: 'weekly',
+      recurringInterval: 1,
+      recurringUntil: '',
     });
+    this.inviteeForm.reset({ customerId: '', name: '', email: '' });
+    this.invitees.set([]);
     this.errorMessage.set('');
   }
 
-  private toggleRecurringValidators(isRecurring: boolean): void {
-    if (isRecurring) {
-      this.recurringFrequency?.setValidators([Validators.required]);
-      this.recurringUntil?.setValidators([Validators.required]);
-    } else {
-      this.recurringFrequency?.clearValidators();
-      this.recurringUntil?.clearValidators();
-    }
-    this.recurringFrequency?.updateValueAndValidity();
-    this.recurringUntil?.updateValueAndValidity();
-  }
-
-  protected isDateRangeValid(): boolean {
-    const startDate = this.startDate?.value;
-    const startTime = this.startTime?.value;
-    const endDate = this.endDate?.value;
-    const endTime = this.endTime?.value;
-
-    if (!startDate || !startTime || !endDate || !endTime) {
-      return true; // Don't show error until all fields filled
-    }
-
-    const start = new Date(`${startDate}T${startTime}`);
-    const end = new Date(`${endDate}T${endTime}`);
-
-    return end > start;
-  }
+  // ---- Submit -------------------------------------------------------------
 
   protected onSubmit(): void {
     if (this.appointmentForm.invalid) {
-      this.markAllFieldsAsTouched();
+      this.appointmentForm.markAllAsTouched();
       return;
     }
-
-    if (!this.isDateRangeValid()) {
-      this.errorMessage.set('End date/time must be after start date/time');
-      return;
+    const v = this.appointmentForm.value;
+    const start = new Date(`${v.date}T${v.startTime}`);
+    let end = new Date(`${v.date}T${v.endTime}`);
+    if (!(end > start)) {
+      // Keep end after start (mirror mobile: default to +1h).
+      end = new Date(start.getTime() + 60 * 60 * 1000);
     }
-
-    const formValue = this.appointmentForm.value;
-    const user = this.authService.getCurrentUser();
-    const business = this.businessService.business();
-
-    if (!user || !business) {
-      this.errorMessage.set('User or business not found');
-      return;
-    }
-
-    const startDateTime = new Date(`${formValue.startDate}T${formValue.startTime}`);
-    const endDateTime = new Date(`${formValue.endDate}T${formValue.endTime}`);
 
     const dto: CreateAppointmentDto = {
-      title: formValue.title,
-      description: formValue.description || undefined,
-      startTime: startDateTime,
-      endTime: endDateTime,
-      notes: formValue.notes || undefined,
-      businessId: business.id,
-      customerId: formValue.customerId || undefined,
-      isRecurring: formValue.isRecurring,
-      recurringFrequency: formValue.isRecurring ? formValue.recurringFrequency : undefined,
-      recurringUntil: formValue.isRecurring ? formValue.recurringUntil : undefined
+      title: v.title,
+      startTime: start,
+      endTime: end,
+      location: v.location || undefined,
+      notes: v.notes || undefined,
+      invitees: this.invitees().length ? this.invitees() : undefined,
+      isRecurring: v.isRecurring,
+      recurringFrequency: v.isRecurring ? v.recurringFrequency : undefined,
+      recurringInterval: v.isRecurring ? v.recurringInterval || 1 : undefined,
+      recurringUntil: v.isRecurring && v.recurringUntil ? v.recurringUntil : undefined,
     };
 
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    if (this.modalMode() === 'edit' && this.selectedAppointment()) {
-      this.updateAppointment(this.selectedAppointment()!.id, dto);
-    } else {
-      this.createAppointment(dto);
-    }
-  }
+    const editing = this.modalMode() === 'edit' && this.selectedAppointment();
+    const request$ = editing
+      ? this.appointmentService.updateAppointment(this.selectedAppointment()!.id, dto)
+      : this.appointmentService.createAppointment(dto);
 
-  private createAppointment(dto: CreateAppointmentDto): void {
-    this.appointmentService.createAppointment(dto)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (appointment) => {
-          this.isLoading.set(false);
-          this.calendarState.addAppointment(appointment);
-          this.calendarState.closeModal();
-          
-          // Show success notification
-          const customerName = this.customers().find(c => c.id === dto.customerId)?.name;
-          const notificationMessage = customerName 
-            ? `Appointment "${appointment.title}" scheduled for ${customerName}` 
-            : `Appointment "${appointment.title}" scheduled successfully`;
-          
-          this.notificationService.showSuccess(notificationMessage);
-          
-          // Additional notification if customer has email (indicating email was sent)
-          const customer = this.customers().find(c => c.id === dto.customerId);
-          if (customer?.email) {
-            setTimeout(() => {
-              this.notificationService.showInfo(`Confirmation email sent to ${customer.email}`);
-            }, 1000);
-          }
-          
-          // Show success notification for updates
-          this.notificationService.showSuccess(`Appointment "${appointment.title}" updated successfully`);
-        },
-        error: (error) => {
-          this.isLoading.set(false);
-          this.errorMessage.set(this.extractErrorMessage(error));
-        }
-      });
-  }
-
-  private updateAppointment(id: string, dto: CreateAppointmentDto): void {
-    this.appointmentService.updateAppointment(id, dto)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (appointment) => {
-          this.isLoading.set(false);
+    request$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (appointment) => {
+        this.isLoading.set(false);
+        if (editing) {
           this.calendarState.updateAppointment(appointment);
-          this.calendarState.closeModal();
-        },
-        error: (error) => {
-          this.isLoading.set(false);
-          this.errorMessage.set(this.extractErrorMessage(error));
+        } else {
+          this.calendarState.addAppointment(appointment);
+          this.notificationService.showSuccess(`Appointment "${appointment.title}" scheduled`);
         }
-      });
+        this.calendarState.closeModal();
+      },
+      error: (error) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(this.extractErrorMessage(error));
+      },
+    });
   }
 
   protected onDelete(): void {
@@ -289,33 +239,26 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
   }
 
   protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.onClose();
-    }
+    if (event.target === event.currentTarget) this.onClose();
   }
 
-  private markAllFieldsAsTouched(): void {
-    Object.keys(this.appointmentForm.controls).forEach(key => {
-      this.appointmentForm.get(key)?.markAsTouched();
-    });
+  private dateInput(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
-  private formatDateForInput(date: Date): string {
-    return date.toISOString().split('T')[0];
-  }
-
-  private formatTimeForInput(date: Date): string {
-    return date.toTimeString().slice(0, 5);
+  private timeInput(date: Date): string {
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
   }
 
   private extractErrorMessage(error: any): string {
-    if (error?.error?.message && Array.isArray(error.error.message)) {
-      return error.error.message[0];
-    } else if (error?.error?.message) {
-      return error.error.message;
-    } else if (error?.message) {
-      return error.message;
+    if (error?.error?.message) {
+      return Array.isArray(error.error.message) ? error.error.message[0] : error.error.message;
     }
-    return 'An error occurred. Please try again.';
+    return error?.message || 'An error occurred. Please try again.';
   }
 }

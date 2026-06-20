@@ -133,13 +133,54 @@ export interface Cancellations {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Dashboard summary — matches GET /dashboard/summary on the new backend
+// (mirrors the mobile app). The interfaces above are retained for any legacy
+// consumers but are no longer part of the live summary.
+// ---------------------------------------------------------------------------
+
+/** Headline revenue figures + trend vs the previous 30 days. */
+export interface DashboardRevenue {
+  total: number;
+  last30Days: number;
+  previous30Days: number;
+  /** Percentage change vs previous 30 days; null when not computable. */
+  trendPercent: number | null;
+}
+
+export interface DashboardTopProduct {
+  resourceId: string;
+  name: string;
+  unitsSold: number;
+}
+
+/** Inventory health: low-stock count + best sellers. */
+export interface DashboardInventory {
+  lowStockCount: number;
+  topProducts: DashboardTopProduct[];
+}
+
+/** Compact invoice row for the recent-invoices list. */
+export interface DashboardRecentInvoice {
+  invoiceId: string;
+  invoiceNumber: string;
+  customerName: string | null;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
+/** A single day's revenue point for the chart. */
+export interface DashboardDailyRevenuePoint {
+  date: string;
+  amount: number;
+}
+
 export interface DashboardSummary {
-  financial: FinancialSummary;
-  stats: DashboardStats;
-  alerts: DashboardAlerts;
-  topPerformers: TopPerformers;
-  recentActivity: RecentActivity[];
-  cancellations: Cancellations;
+  revenue: DashboardRevenue;
+  inventory: DashboardInventory;
+  recentInvoices: DashboardRecentInvoice[];
+  dailyRevenue: DashboardDailyRevenuePoint[];
 }
 
 export interface StatCard {

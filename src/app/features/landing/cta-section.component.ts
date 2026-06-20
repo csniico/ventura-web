@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
           Join thousands of business owners who have streamlined their operations with Ventura. Start your free trial today.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a routerLink="/auth/register" class="bg-white text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+          <a routerLink="/auth/login" class="bg-white text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
             Start Free Trial
           </a>
           <a routerLink="/auth/login" class="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-black transition-all duration-300">
