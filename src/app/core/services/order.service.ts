@@ -84,7 +84,9 @@ export class OrderService {
    * single large page (the dashboard summary is the richer source).
    */
   getOrderStats(businessId: string, startDate?: string, endDate?: string): Observable<OrderStats> {
-    return this.getOrders(businessId, undefined, undefined, 1000, 1).pipe(
+    // The backend caps `limit` at 100; stats are derived from the most recent
+    // page (the dashboard summary is the richer source for full totals).
+    return this.getOrders(businessId, undefined, undefined, 100, 1).pipe(
       map(({ orders }) => ({
         totalOrders: orders.length,
         pendingOrders: orders.filter((o) => o.status === OrderStatus.PENDING).length,
