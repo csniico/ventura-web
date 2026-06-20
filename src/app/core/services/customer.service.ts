@@ -42,7 +42,7 @@ export class CustomerService {
 
   createCustomer(customer: CreateCustomerDto): Observable<Customer> {
     return this.http
-      .post<any>(API_ENDPOINTS.CUSTOMERS.BASE, this.stripBusinessId(customer))
+      .post<any>(API_ENDPOINTS.CUSTOMERS.BASE, this.compact(customer))
       .pipe(map((c) => withId(c) as Customer));
   }
 
@@ -52,7 +52,7 @@ export class CustomerService {
     customerData: Partial<Customer>,
   ): Observable<Customer> {
     return this.http
-      .patch<any>(API_ENDPOINTS.CUSTOMERS.BY_ID(customerId), this.stripBusinessId(customerData))
+      .patch<any>(API_ENDPOINTS.CUSTOMERS.BY_ID(customerId), this.compact(customerData))
       .pipe(map((c) => withId(c) as Customer));
   }
 
@@ -63,7 +63,7 @@ export class CustomerService {
   importCustomers(
     customers: CreateCustomerDto[],
   ): Observable<{ imported: number; failed: number }> {
-    const payload = { customers: customers.map((c) => this.stripBusinessId(c)) };
+    const payload = { customers: customers.map((c) => this.compact(c)) };
     return this.http
       .post<{ created?: any[]; skipped?: any[]; failed?: any[] }>(API_ENDPOINTS.CUSTOMERS.IMPORT, payload)
       .pipe(
@@ -74,9 +74,23 @@ export class CustomerService {
       );
   }
 
-  // The API rejects unknown/owner-scoped props; business is taken from the token.
-  private stripBusinessId<T extends Record<string, any>>(obj: T): Omit<T, 'businessId'> {
-    const { businessId, ...rest } = obj as Record<string, any>;
-    return rest as Omit<T, 'businessId'>;
+  // Send only the editable fields with real values. The API takes the business
+  // from the token (so drop businessId/ids) and validates optional fields like
+  // email with @IsEmail, which rejects empty strings — so empties are omitted.
+  private compact<T extends Record<string, any>>(obj: T): Record<string, unknown> {
+    const skip = new Set(['businessId', 'id', '_id', 'shortId', 'createdAt', 'updatedAt', 'customer']);
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (skip.has(key)) continue;
+      if (value === undefined || value === null) continue;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') continue;
+        out[key] = trimmed;
+      } else {
+        out[key] = value;
+      }
+    }
+    return out;
   }
 }
