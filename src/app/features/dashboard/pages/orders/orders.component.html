@@ -209,6 +209,7 @@
         [currentPage]="orderState.currentPage()"
         [pageSize]="orderState.pageSize()"
         (orderView)="onViewOrder($event)"
+        (orderEdit)="onEditOrder($event)"
         (orderStatusChange)="onStatusChange($event)"
         (pageChange)="onPageChange($event)"
         (createOrder)="openCreateModal()"
@@ -254,6 +255,19 @@
     [order]="orderState.selectedOrder()"
     [viewMode]="true"
     [businessId]="businessId()"
+    (close)="orderState.closeModal()"
+  />
+}
+
+<!-- Edit Order Modal (pending orders only) -->
+@if (orderState.isModalOpen() && orderState.modalMode() === 'edit' && orderState.selectedOrder()) {
+  <app-order-modal
+    [isOpen]="true"
+    [order]="orderState.selectedOrder()"
+    [editMode]="true"
+    [customers]="orderState.customers()"
+    [businessId]="businessId()"
+    (update)="onUpdateOrder($event)"
     (close)="orderState.closeModal()"
   />
 }

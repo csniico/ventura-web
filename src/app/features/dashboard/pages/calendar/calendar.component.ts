@@ -10,6 +10,7 @@ import { CalendarHeaderComponent } from './components/calendar-header/calendar-h
 import { CalendarGridComponent } from './components/calendar-grid/calendar-grid.component';
 import { CalendarWeekViewComponent } from './components/calendar-week-view/calendar-week-view.component';
 import { CalendarDayViewComponent } from './components/calendar-day-view/calendar-day-view.component';
+import { CalendarAgendaViewComponent } from './components/calendar-agenda-view/calendar-agenda-view.component';
 import { AppointmentModalComponent } from '../../components/appointment-modal/appointment-modal.component';
 import { DeleteConfirmationModalComponent } from '../../components/delete-confirmation-modal/delete-confirmation-modal.component';
 import { Appointment } from '../../../../shared/models/appointment.model';
@@ -23,6 +24,7 @@ import { Appointment } from '../../../../shared/models/appointment.model';
     CalendarGridComponent,
     CalendarWeekViewComponent,
     CalendarDayViewComponent,
+    CalendarAgendaViewComponent,
     AppointmentModalComponent,
     DeleteConfirmationModalComponent
   ],
@@ -82,5 +84,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   protected onAppointmentClick(appointment: Appointment): void {
     this.calendarState.openEditModal(appointment);
+  }
+
+  protected onCreateAppointment(): void {
+    this.calendarState.openCreateModal();
   }
 }

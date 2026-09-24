@@ -6,7 +6,7 @@ import { OrderService } from '../../../../core/services/order.service';
 import { OrderStateService, OrderTab } from '../../services/order-state.service';
 import { CustomerService } from '../../../../core/services/customer.service';
 import { BusinessService } from '../../../../core/services/business.service';
-import { Order, OrderStatus, CreateOrderDto } from '../../../../core/models/order.model';
+import { Order, OrderStatus, CreateOrderDto, CreateOrderItemDto } from '../../../../core/models/order.model';
 import { SearchInputComponent } from '../../../../shared/components/search-input.component';
 import { OrderListComponent } from './order-list.component';
 import { OrderModalComponent } from './order-modal.component';
@@ -149,6 +149,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard/orders', order.id]);
   }
 
+  protected onEditOrder(order: Order): void {
+    this.orderState.openEditModal(order);
+  }
+
   protected onStatusChange(order: Order): void {
     this.orderState.openStatusModal(order);
   }
@@ -168,6 +172,25 @@ export class OrdersComponent implements OnInit, OnDestroy {
           this.orderState.closeModal();
           this.showToast(`Order ${order.orderNumber} created successfully`, 'success');
           // Refresh stats
+          this.loadStats();
+        }
+      });
+  }
+
+  protected onUpdateOrder(data: { orderId: string; items: CreateOrderItemDto[] }): void {
+    this.orderService.updateOrder(data.orderId, data.items)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => {
+          this.showToast('Failed to update order', 'error');
+          return of(null);
+        })
+      )
+      .subscribe(order => {
+        if (order) {
+          this.orderState.updateOrder(order);
+          this.orderState.closeModal();
+          this.showToast(`Order ${order.orderNumber} updated successfully`, 'success');
           this.loadStats();
         }
       });

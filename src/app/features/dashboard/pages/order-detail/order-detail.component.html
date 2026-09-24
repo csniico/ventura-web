@@ -134,19 +134,19 @@
         </div>
 
         <!-- Customer Info -->
-        @if (order()!.customer) {
+        @if (order()!.customerName || order()!.customer) {
           <div class="bg-white rounded-lg border border-gray-200 p-6">
             <h3 class="text-base font-semibold text-gray-900 mb-3">Customer</h3>
             <div class="flex items-center gap-3 mb-3">
               <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                 <span class="text-sm font-semibold text-white">
-                  {{ order()!.customer!.name.charAt(0).toUpperCase() }}
+                  {{ (order()!.customerName || order()!.customer?.name || '?').charAt(0).toUpperCase() }}
                 </span>
               </div>
               <div>
-                <p class="font-medium text-gray-900">{{ order()!.customer!.name }}</p>
-                @if (order()!.customer!.email) {
-                  <p class="text-xs text-gray-500">{{ order()!.customer!.email }}</p>
+                <p class="font-medium text-gray-900">{{ order()!.customerName || order()!.customer?.name || 'Unknown' }}</p>
+                @if (order()!.customerEmail || order()!.customer?.email) {
+                  <p class="text-xs text-gray-500">{{ order()!.customerEmail || order()!.customer?.email }}</p>
                 }
               </div>
             </div>

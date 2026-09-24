@@ -16,9 +16,12 @@ export class OrderListComponent {
   @Input() pageSize = 10;
 
   @Output() orderView = new EventEmitter<Order>();
+  @Output() orderEdit = new EventEmitter<Order>();
   @Output() orderStatusChange = new EventEmitter<Order>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() createOrder = new EventEmitter<void>();
+
+  protected readonly OrderStatus = OrderStatus;
 
   protected Math = Math;
 

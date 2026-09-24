@@ -32,18 +32,32 @@ export class InvoiceModalComponent implements OnChanges {
   protected readonly InvoiceType = InvoiceType;
   protected readonly InvoiceStatus = InvoiceStatus;
 
+  /** An order is billable if it isn't already invoiced, isn't cancelled, and
+   *  (for STANDARD invoices) is completed. */
+  private isBillable(o: Order): boolean {
+    const requiresCompletion = this.invoiceType() === InvoiceType.STANDARD;
+    return (
+      !o.invoiceId &&
+      o.status !== OrderStatus.CANCELLED &&
+      (!requiresCompletion || o.status === OrderStatus.COMPLETED)
+    );
+  }
+
+  /** Only customers with at least one billable order can be invoiced, so the
+   *  picker lists those rather than every customer (QA B6). */
+  protected eligibleCustomers = computed(() => {
+    const billableIds = new Set(
+      this.availableOrders.filter(o => this.isBillable(o)).map(o => o.customerId),
+    );
+    return this.customers.filter(c => billableIds.has(c.id));
+  });
+
   protected customerOrders = computed(() => {
     const customerId = this.selectedCustomerId();
     if (!customerId) return [];
 
-    const type = this.invoiceType();
-    const requiresCompletion = type === InvoiceType.STANDARD;
-
-    return this.availableOrders.filter(o =>
-      o.customerId === customerId &&
-      !o.invoiceId &&
-      o.status !== OrderStatus.CANCELLED &&
-      (!requiresCompletion || o.status === OrderStatus.COMPLETED)
+    return this.availableOrders.filter(
+      o => o.customerId === customerId && this.isBillable(o),
     );
   });
 

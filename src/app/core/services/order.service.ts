@@ -6,6 +6,7 @@ import {
   Order,
   OrderItem,
   CreateOrderDto,
+  CreateOrderItemDto,
   UpdateOrderStatusDto,
   OrderStatus,
   OrderStats,
@@ -48,6 +49,23 @@ export class OrderService {
       })),
     };
     return this.http.post<any>(API_ENDPOINTS.ORDERS.BASE, payload).pipe(map((o) => this.mapOrder(o)));
+  }
+
+  /**
+   * Replace the line items of a pending order. The backend re-snapshots
+   * name/price and reconciles stock; it accepts `{ resourceId, quantity }` per
+   * line, so map the web's product/service ids down to `resourceId`.
+   */
+  updateOrder(orderId: string, items: CreateOrderItemDto[]): Observable<Order> {
+    const payload = {
+      items: (items ?? []).map((it) => ({
+        resourceId: it.productId ?? it.serviceId,
+        quantity: it.quantity,
+      })),
+    };
+    return this.http
+      .patch<any>(API_ENDPOINTS.ORDERS.BY_ID(orderId), payload)
+      .pipe(map((o) => this.mapOrder(o)));
   }
 
   updateOrderStatus(orderId: string, businessId: string, dto: UpdateOrderStatusDto): Observable<Order> {

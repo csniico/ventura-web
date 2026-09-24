@@ -44,7 +44,7 @@ export class OrderStateService {
 
   // Modal state
   private readonly _isModalOpen = signal(false);
-  private readonly _modalMode = signal<'create' | 'view'>('create');
+  private readonly _modalMode = signal<'create' | 'view' | 'edit'>('create');
   private readonly _selectedOrder = signal<Order | null>(null);
 
   // Status update modal
@@ -94,8 +94,8 @@ export class OrderStateService {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(o =>
         o.orderNumber.toLowerCase().includes(query) ||
-        o.customer?.name?.toLowerCase().includes(query) ||
-        o.customer?.email?.toLowerCase().includes(query)
+        (o.customerName ?? o.customer?.name)?.toLowerCase().includes(query) ||
+        (o.customerEmail ?? o.customer?.email)?.toLowerCase().includes(query)
       );
     }
 
@@ -245,6 +245,12 @@ export class OrderStateService {
 
   openViewModal(order: Order): void {
     this._modalMode.set('view');
+    this._selectedOrder.set(order);
+    this._isModalOpen.set(true);
+  }
+
+  openEditModal(order: Order): void {
+    this._modalMode.set('edit');
     this._selectedOrder.set(order);
     this._isModalOpen.set(true);
   }

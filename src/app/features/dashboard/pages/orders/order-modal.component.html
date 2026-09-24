@@ -6,10 +6,10 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-lg font-semibold text-gray-900">
-              {{ viewMode ? 'Order Details' : 'Create Order' }}
+              {{ viewMode ? 'Order Details' : editMode ? 'Edit Order' : 'Create Order' }}
             </h3>
             <p class="text-sm text-gray-500 mt-0.5">
-              {{ viewMode ? order?.orderNumber : 'Add items and customer details' }}
+              {{ viewMode ? order?.orderNumber : editMode ? 'Update the items on this order' : 'Add items and customer details' }}
             </p>
           </div>
           <button
@@ -45,8 +45,8 @@
               </div>
               <div>
                 <p class="text-sm text-gray-500">Customer</p>
-                <p class="text-sm font-medium text-gray-900">{{ order.customer?.name || 'Unknown' }}</p>
-                <p class="text-xs text-gray-500">{{ order.customer?.email }}</p>
+                <p class="text-sm font-medium text-gray-900">{{ order.customerName || order.customer?.name || 'Unknown' }}</p>
+                <p class="text-xs text-gray-500">{{ order.customerEmail || order.customer?.email }}</p>
               </div>
               <div>
                 <p class="text-sm text-gray-500">Date</p>
@@ -258,9 +258,9 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Creating...
+                {{ editMode ? 'Saving...' : 'Creating...' }}
               } @else {
-                Create Order
+                {{ editMode ? 'Save Changes' : 'Create Order' }}
               }
             </button>
           </div>

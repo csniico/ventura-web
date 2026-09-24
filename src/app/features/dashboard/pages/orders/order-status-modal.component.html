@@ -15,10 +15,11 @@
           <button
             type="button"
             (click)="selectStatus(status.value)"
+            [disabled]="isStatusDisabled(status.value)"
             [class]="selectedStatus() === status.value
               ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
               : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
-            class="w-full p-4 text-left border rounded-lg transition-all"
+            class="w-full p-4 text-left border rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
           >
             <div class="flex items-center">
               <span
@@ -27,7 +28,7 @@
               ></span>
               <div>
                 <p class="text-sm font-medium text-gray-900">{{ status.label }}</p>
-                <p class="text-xs text-gray-500">{{ status.description }}</p>
+                <p class="text-xs text-gray-500">{{ disabledReason(status.value) || status.description }}</p>
               </div>
             </div>
           </button>

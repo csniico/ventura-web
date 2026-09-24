@@ -35,10 +35,43 @@ export class OrderStatusModalComponent {
     }
   ];
 
+  /**
+   * Legal transitions, mirroring the backend: CANCELLED is terminal, a COMPLETED
+   * order can only be cancelled (never reopened), and an order that is already on
+   * an invoice can't be cancelled — the invoice must be cancelled first. This
+   * stops paid/invoiced orders being cancelled out from under their invoice.
+   */
+  private static readonly TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+    [OrderStatus.PENDING]: [OrderStatus.COMPLETED, OrderStatus.CANCELLED],
+    [OrderStatus.COMPLETED]: [OrderStatus.CANCELLED],
+    [OrderStatus.CANCELLED]: []
+  };
+
   ngOnChanges(): void {
     if (this.isOpen && this.order) {
       this.selectedStatus.set(this.order.status);
     }
+  }
+
+  /** The current status is always shown (as the active one); others must be a
+   *  legal transition and not blocked by an existing invoice. */
+  protected isStatusDisabled(status: OrderStatus): boolean {
+    if (!this.order) return true;
+    if (status === this.order.status) return false;
+    const allowed = OrderStatusModalComponent.TRANSITIONS[this.order.status] ?? [];
+    if (!allowed.includes(status)) return true;
+    if (status === OrderStatus.CANCELLED && !!this.order.invoiceId) return true;
+    return false;
+  }
+
+  protected disabledReason(status: OrderStatus): string | null {
+    if (!this.order || !this.isStatusDisabled(status) || status === this.order.status) {
+      return null;
+    }
+    if (status === OrderStatus.CANCELLED && !!this.order.invoiceId) {
+      return 'On an invoice — cancel the invoice first';
+    }
+    return 'Not allowed from the current status';
   }
 
   protected getStatusDotColor(status: OrderStatus): string {
@@ -55,6 +88,7 @@ export class OrderStatusModalComponent {
   }
 
   protected selectStatus(status: OrderStatus): void {
+    if (this.isStatusDisabled(status)) return;
     this.selectedStatus.set(status);
   }
 
