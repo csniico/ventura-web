@@ -35,6 +35,12 @@
         (appointmentClick)="onAppointmentClick($event)"
       />
     }
+    @case ('agenda') {
+      <app-calendar-agenda-view
+        (appointmentClick)="onAppointmentClick($event)"
+        (createAppointment)="onCreateAppointment()"
+      />
+    }
   }
 </div>
 

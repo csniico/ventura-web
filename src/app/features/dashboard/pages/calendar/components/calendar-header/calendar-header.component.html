@@ -60,6 +60,16 @@
     >
       Day
     </button>
+    <button
+      (click)="setViewMode('agenda')"
+      class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
+      [class.bg-white]="viewMode() === 'agenda'"
+      [class.text-gray-900]="viewMode() === 'agenda'"
+      [class.shadow-sm]="viewMode() === 'agenda'"
+      [class.text-gray-600]="viewMode() !== 'agenda'"
+    >
+      Agenda
+    </button>
   </div>
 
   <!-- Right: New Appointment Button -->

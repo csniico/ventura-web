@@ -58,6 +58,7 @@
               type="date"
               id="date"
               formControlName="date"
+              [attr.min]="minDate"
               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
               [class.border-red-300]="date?.invalid && date?.touched"
             />

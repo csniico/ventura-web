@@ -44,10 +44,10 @@
               <!-- Customer Info -->
               <div class="bg-gray-50 rounded-lg p-4">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Customer</h3>
-                <p class="font-medium text-gray-900">{{ invoice.customer?.name || 'Unknown' }}</p>
-                <p class="text-sm text-gray-600">{{ invoice.customer?.email || '-' }}</p>
-                @if (invoice.customer?.phone) {
-                  <p class="text-sm text-gray-600">{{ invoice.customer?.phone }}</p>
+                <p class="font-medium text-gray-900">{{ invoice.customerName || invoice.customer?.name || 'Unknown' }}</p>
+                <p class="text-sm text-gray-600">{{ invoice.customerEmail || invoice.customer?.email || '-' }}</p>
+                @if (invoice.customerPhone || invoice.customer?.phone) {
+                  <p class="text-sm text-gray-600">{{ invoice.customerPhone || invoice.customer?.phone }}</p>
                 }
               </div>
 
@@ -134,10 +134,15 @@
                   class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select a customer</option>
-                  @for (customer of customers; track customer.id) {
+                  @for (customer of eligibleCustomers(); track customer.id) {
                     <option [value]="customer.id">{{ customer.name }} ({{ customer.email }})</option>
                   }
                 </select>
+                @if (eligibleCustomers().length === 0) {
+                  <p class="text-xs text-gray-500 mt-1">
+                    No customers have orders ready to invoice for this invoice type.
+                  </p>
+                }
               </div>
 
               <!-- Orders Selection -->

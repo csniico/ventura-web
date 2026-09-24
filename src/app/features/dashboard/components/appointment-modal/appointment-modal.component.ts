@@ -67,6 +67,13 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
   get isRecurring() { return this.appointmentForm.get('isRecurring'); }
   get recurringFrequency() { return this.appointmentForm.get('recurringFrequency'); }
 
+  /** Today as a `yyyy-MM-dd` value — the floor for a new appointment's date. */
+  get todayInput(): string { return this.dateInput(new Date()); }
+  /** Only restrict the date picker when creating; editing may touch past ones. */
+  get minDate(): string | null {
+    return this.modalMode() === 'edit' ? null : this.todayInput;
+  }
+
   constructor() {
     effect(() => {
       const appointment = this.selectedAppointment();
@@ -187,6 +194,15 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
       end = new Date(start.getTime() + 60 * 60 * 1000);
     }
 
+    const editing = this.modalMode() === 'edit' && this.selectedAppointment();
+
+    // A new appointment can't be scheduled in the past (editing an existing one
+    // stays allowed). One minute of clock skew is tolerated.
+    if (!editing && start.getTime() < Date.now() - 60_000) {
+      this.errorMessage.set("Start date and time can't be in the past.");
+      return;
+    }
+
     const dto: CreateAppointmentDto = {
       title: v.title,
       startTime: start,
@@ -203,7 +219,6 @@ export class AppointmentModalComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    const editing = this.modalMode() === 'edit' && this.selectedAppointment();
     const request$ = editing
       ? this.appointmentService.updateAppointment(this.selectedAppointment()!.id, dto)
       : this.appointmentService.createAppointment(dto);

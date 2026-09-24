@@ -50,8 +50,8 @@
             </td>
             <td class="py-4 px-4">
               <div>
-                <p class="text-sm font-medium text-gray-900">{{ invoice.customer?.name || 'Unknown' }}</p>
-                <p class="text-xs text-gray-500">{{ invoice.customer?.email || '-' }}</p>
+                <p class="text-sm font-medium text-gray-900">{{ invoice.customerName || invoice.customer?.name || 'Unknown' }}</p>
+                <p class="text-xs text-gray-500">{{ invoice.customerEmail || invoice.customer?.email || '-' }}</p>
               </div>
             </td>
             <td class="py-4 px-4">

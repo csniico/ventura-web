@@ -9,7 +9,7 @@ export interface CalendarDay {
   appointments: Appointment[];
 }
 
-export type ViewMode = 'month' | 'week' | 'day';
+export type ViewMode = 'month' | 'week' | 'day' | 'agenda';
 export type ModalMode = 'create' | 'edit';
 
 @Injectable({

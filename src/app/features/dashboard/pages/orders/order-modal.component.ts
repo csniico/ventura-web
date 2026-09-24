@@ -28,8 +28,11 @@ export class OrderModalComponent implements OnInit, OnChanges {
   @Input() customers: Customer[] = [];
   @Input() businessId = '';
   @Input() viewMode = false;
+  /** Edit an existing pending order's items (customer stays fixed). */
+  @Input() editMode = false;
 
   @Output() save = new EventEmitter<CreateOrderDto>();
+  @Output() update = new EventEmitter<{ orderId: string; items: CreateOrderItemDto[] }>();
   @Output() close = new EventEmitter<void>();
 
   private readonly fb = inject(FormBuilder);
@@ -62,7 +65,24 @@ export class OrderModalComponent implements OnInit, OnChanges {
     if (changes['isOpen']) {
       if (this.isOpen && !this.viewMode) {
         this.initForm();
-        this.lineItems.set([]);
+        if (this.editMode && this.order) {
+          // Prefill the existing order; the customer can't change on an edit
+          // (the backend only re-snapshots items), so lock the select.
+          this.orderForm.patchValue({ customerId: this.order.customerId });
+          this.orderForm.get('customerId')?.disable();
+          this.lineItems.set(
+            this.order.items.map((it) => ({
+              itemType: it.itemType,
+              itemId: (it.itemType === ItemType.PRODUCT ? it.productId : it.serviceId) ?? it.id,
+              name: it.name,
+              price: it.price,
+              quantity: it.quantity,
+              subTotal: it.subTotal,
+            })),
+          );
+        } else {
+          this.lineItems.set([]);
+        }
         this.loadResources();
       }
     }
@@ -178,13 +198,17 @@ export class OrderModalComponent implements OnInit, OnChanges {
       ...(item.itemType === ItemType.PRODUCT ? { productId: item.itemId } : { serviceId: item.itemId })
     }));
 
-    const dto: CreateOrderDto = {
-      businessId: this.businessId,
-      customerId: this.orderForm.value.customerId,
-      items
-    };
-
-    this.save.emit(dto);
+    if (this.editMode && this.order) {
+      this.update.emit({ orderId: this.order.id, items });
+    } else {
+      const dto: CreateOrderDto = {
+        businessId: this.businessId,
+        // getRawValue so a disabled control (none in create) is still read.
+        customerId: this.orderForm.getRawValue().customerId,
+        items
+      };
+      this.save.emit(dto);
+    }
     this.isSubmitting.set(false);
   }
 
